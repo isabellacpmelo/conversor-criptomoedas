@@ -1,12 +1,47 @@
-# conversor-criptomoedas
-conversor-criptomoedas
-## Build Setup
+# Cryptocurrency Converter
+
+Projeto criado utilizando Nuxt e Tailwind CSS, com o objetivo de produzir um conversor de criptomoedas, permitindo que o usuário saiba a cotação do criptoativo desejado.
+
+Clique <a href="https://crypto-psi-ten.vercel.app/">aqui</a> para acessar o projeto.
+
+<a href="https://crypto-psi-ten.vercel.app/"> <img width="500" alt="Git Cryptocurrency Converter" src="img/converter.gif"></a>
+
+## Ferramentas utilizadas
+
+* <a href="https://code.visualstudio.com/">VS Code</a>
+* <a href="https://nodejs.org/en/">Node.js</a>
+* <a href="https://vuejs.org/">Vue.js</a>
+* <a href="https://nuxtjs.org/">Nuxt.js</a>
+* <a href="https://tailwindcss.com/">Tailwind CSS</a>
+* <a href="https://www.coinapi.io/">CoinAPI.io</a>
+
+## Desafios encontrados
+* Instalação do Nuxt e Tailwind CSS
+* API Key permite apenas 100 requições a cada 24H (ao exceder esse valor, gera o erro 429)
+* O carregamento da página atrapalha o funcionamento do conversor, provavelmente devido ao método assync
+
+## Como executar o projeto
+    # install dependencies
+    $ npm install
+
+    # serve with hot reload at localhost:3000
+    $ cd cryptocurrency-converter
+    $ npm run dev
+
+## Print do Projeto
+<img width="500" src="img/cryptocurrency-converter.png">
+</br>
+</br>
+
+
+# Build Setup
 
 ```bash
 # install dependencies
 $ npm install
 
 # serve with hot reload at localhost:3000
+$ cd cryptocurrency-converter
 $ npm run dev
 
 # build for production and launch server
