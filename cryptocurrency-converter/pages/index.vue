@@ -16,7 +16,7 @@
             placeholder="Crypto"    
             autocomplete="on"
           >
-          <button class="mx-5 font-bold bg-indigo-700 hover:bg-violet-500 text-white ring-2 px-8 rounded-full" @click="addCrypto">OK</button>
+          <button class="mx-5 font-bold bg-indigo-700 hover:bg-violet-500 text-white ring-2 px-8 rounded-full" @click.stop.prevent="addCrypto()">OK</button>
       </form>
       <div v-for="data in dataList" :key = "data.data_id" class="bg-indigo-50 p-6 flex space-x-6">
         <h1 class="font-bold"> {{ data.name }} </h1>
