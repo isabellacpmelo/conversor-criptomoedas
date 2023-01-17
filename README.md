@@ -32,10 +32,8 @@ Clique <a href="https://63c63a9de5204d6d12509bc2--beamish-youtiao-feb166.netlify
     $ npm run dev
 
 ## Print do Projeto
-![image](https://user-images.githubusercontent.com/42364778/212822345-1e628d9f-63a7-4464-bbe2-cb8454335909.png)
-
 <a href="https://63c63a9de5204d6d12509bc2--beamish-youtiao-feb166.netlify.app/">
-    <img width="500" src="https://user-images.githubusercontent.com/42364778/212822345-1e628d9f-63a7-4464-bbe2-cb8454335909.png">
+    <img src="https://user-images.githubusercontent.com/42364778/212822345-1e628d9f-63a7-4464-bbe2-cb8454335909.png">
 </a>
 
 </br>
