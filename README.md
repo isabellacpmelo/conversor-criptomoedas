@@ -2,7 +2,7 @@
 
 # Cripto Coin
 
-Projeto criado utilizando Nuxt e Tailwind CSS, com o objetivo de produzir um conversor de criptomoedas, permitindo que o usuário saiba a cotação do criptoativo desejado.
+Projeto criado utilizando Vue.js, Nuxt.js e Tailwind CSS, com o objetivo de produzir um conversor de criptomoedas, permitindo que o usuário saiba a cotação do criptoativo desejado.
 
 Clique <a href="https://63c63a9de5204d6d12509bc2--beamish-youtiao-feb166.netlify.app/">aqui</a> para acessar o projeto.
 
