@@ -2,43 +2,43 @@
   <div
     class="bg-gradient-to-r from-[#2B5876] to-[#4E4376] w-full py-16 px-6 h-screen"
   >
-    <div class="mx-auto container bg-purple-100">
-      <img
-        class="w-35"
-        src="https://img.icons8.com/external-lylac-kerismaker/64/000000/external-Bitcoin-crypto-lylac-kerismaker.png"
-      />
-      <h1 class="text-5xl font-bold text-indigo-800">
-        Cryptocurrency Converter
-      </h1>
-      <article class="my-20">
-        <h2 class="text-3xl font-semibold mb-3">
-          Welcome to the cryptocurrency price converter!
-        </h2>
-        <p class="mb-1">
-          Use to find out the current price of your cryptocurrency in dollars
-          (USD).
-        </p>
-      </article>
+    <div
+      class="mx-auto min-h-full container rounded-lg p-16 bg-[#9ceaef] bg-opacity-30"
+    >
+      <div class="flex flex-col items-center">
+        <img class="w-20 mb-2" src="@/assets/img/criptomoedas.png" />
+        <h1 class="text-5xl font-bold text-indigo-800">
+          Cryptocurrency Converter
+        </h1>
+        <article class="my-20">
+          <h2 class="text-3xl font-semibold mb-3">
+            Welcome to the cryptocurrency price converter!
+          </h2>
+          <p class="mb-1">
+            Use to find out the current price of your cryptocurrency in dollars
+            (USD).
+          </p>
+        </article>
 
-      <form class="my-8 flex">
-        <p class="px-3 py-2 font-semibold">
-          Enter which cryptocurrency you want to convert:
-        </p>
-        <input
-          v-model="newCrypto"
-          class="px-2 py-2 text-black placeholder-gray-400 bg-violet-50 border border-gray-300 rounded shadow-sm transition duration-100 ease-in-outfocus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none focus:ring-opacity-50 disabled:opacity-50"
-          type="text"
-          placeholder="Crypto"
-          autocomplete="on"
-        />
-        <button
-          class="mx-5 font-bold bg-purple-900 hover:bg-violet-500 text-white ring-2 px-8 rounded-full"
-          @click.stop.prevent="addCrypto()"
-        >
-          OK
-        </button>
-      </form>
-      <div
+        <form class="my-8 flex">
+          <p class="px-3 py-2 font-semibold">
+            Enter which cryptocurrency you want to convert:
+          </p>
+          <input
+            v-model="newCrypto"
+            class="px-2 py-2 text-black placeholder-gray-400 bg-violet-50 border border-gray-300 rounded shadow-sm transition duration-100 ease-in-outfocus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none focus:ring-opacity-50 disabled:opacity-50"
+            type="text"
+            placeholder="Crypto"
+            autocomplete="on"
+          />
+          <button
+            class="mx-5 font-bold bg-purple-900 hover:bg-violet-500 text-white ring-2 px-8 rounded-full"
+            @click.stop.prevent="addCrypto()"
+          >
+            OK
+          </button>
+        </form>
+        <!-- <div
         v-for="data in dataList"
         :key="data.data_id"
         class="bg-violet-300 p-6 flex space-x-6"
@@ -55,54 +55,55 @@
           @click.stop.prevent="removeCrypto(data.name)"
           >Remove</a
         >
+      </div> -->
       </div>
     </div>
   </div>
 </template>
 
 <script>
-export default {
-  name: "IndexPage",
-  data() {
-    return {
-      apiKey: "E221F8BF-3AF3-4253-81DD-AB663690A02A",
-      // apiKey: '649F900E-89B7-4C1F-85C2-D26F57C04210',
-      // apiKey: 'CCFAE85E-633E-4207-8D0E-0A49FB2D59B5',
-      allDataList: [],
-      dataList: [],
-      newCrypto: null,
-    };
-  },
+// export default {
+//   name: "IndexPage",
+//   data() {
+//     return {
+//       apiKey: "E221F8BF-3AF3-4253-81DD-AB663690A02A",
+//       // apiKey: '649F900E-89B7-4C1F-85C2-D26F57C04210',
+//       // apiKey: 'CCFAE85E-633E-4207-8D0E-0A49FB2D59B5',
+//       allDataList: [],
+//       dataList: [],
+//       newCrypto: null,
+//     };
+//   },
 
-  head() {
-    return {
-      title: "Cryptocurrency Converter",
-    };
-  },
+//   head() {
+//     return {
+//       title: "Cryptocurrency Converter",
+//     };
+//   },
 
-  async created() {
-    const headers = { "X-CoinAPI-Key": this.apiKey };
-    const response = await fetch("https://rest.coinapi.io/v1/assets", {
-      headers,
-    });
-    const data = await response.json();
-    this.allDataList = data;
-    this.dataList = [this.allDataList.find((e) => e.name === "Bitcoin")];
-  },
+//   async created() {
+//     const headers = { "X-CoinAPI-Key": this.apiKey };
+//     const response = await fetch("https://rest.coinapi.io/v1/assets", {
+//       headers,
+//     });
+//     const data = await response.json();
+//     this.allDataList = data;
+//     this.dataList = [this.allDataList.find((e) => e.name === "Bitcoin")];
+//   },
 
-  methods: {
-    addCrypto() {
-      const currency = this.allDataList.find((e) => e.name === this.newCrypto);
-      if (currency == null) {
-        return alert("No cryptocurrency with this name was found");
-      } else {
-        this.dataList = [...this.dataList, currency];
-      }
-      setInterval(this.dataList, 30000);
-    },
-    removeCrypto(name) {
-      this.dataList = this.dataList.filter((data) => data.name !== name);
-    },
-  },
-};
+//   methods: {
+//     addCrypto() {
+//       const currency = this.allDataList.find((e) => e.name === this.newCrypto);
+//       if (currency == null) {
+//         return alert("No cryptocurrency with this name was found");
+//       } else {
+//         this.dataList = [...this.dataList, currency];
+//       }
+//       setInterval(this.dataList, 30000);
+//     },
+//     removeCrypto(name) {
+//       this.dataList = this.dataList.filter((data) => data.name !== name);
+//     },
+//   },
+// };
 </script>
