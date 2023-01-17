@@ -1,6 +1,8 @@
 <template>
-  <div class="bg-purple-800">
-    <div class="w-1/2 m-auto p-16 bg-purple-100">
+  <div
+    class="bg-gradient-to-r from-[#2B5876] to-[#4E4376] w-full py-16 px-6 h-screen"
+  >
+    <div class="mx-auto container bg-purple-100">
       <img
         class="w-35"
         src="https://img.icons8.com/external-lylac-kerismaker/64/000000/external-Bitcoin-crypto-lylac-kerismaker.png"
