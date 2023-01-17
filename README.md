@@ -4,9 +4,8 @@
 
 Projeto criado utilizando Nuxt e Tailwind CSS, com o objetivo de produzir um conversor de criptomoedas, permitindo que o usuário saiba a cotação do criptoativo desejado.
 
-Clique <a href="https://crypto-psi-ten.vercel.app/">aqui</a> para acessar o projeto.
+Clique <a href="https://63c63a9de5204d6d12509bc2--beamish-youtiao-feb166.netlify.app/">aqui</a> para acessar o projeto.
 
-<a href="https://crypto-psi-ten.vercel.app/"> <img width="500" alt="Git Cryptocurrency Converter" src="img/converter.gif"></a>
 
 ## Ferramentas utilizadas
 
@@ -33,8 +32,12 @@ Clique <a href="https://crypto-psi-ten.vercel.app/">aqui</a> para acessar o proj
     $ npm run dev
 
 ## Print do Projeto
+![image](https://user-images.githubusercontent.com/42364778/212822345-1e628d9f-63a7-4464-bbe2-cb8454335909.png)
 
-<img width="500" src="img/cryptocurrency-converter.png">
+<a href="https://63c63a9de5204d6d12509bc2--beamish-youtiao-feb166.netlify.app/">
+    <img width="500" src="https://user-images.githubusercontent.com/42364778/212822345-1e628d9f-63a7-4464-bbe2-cb8454335909.png">
+</a>
+
 </br>
 </br>
 
