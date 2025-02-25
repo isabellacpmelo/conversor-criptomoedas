@@ -4,7 +4,7 @@
 
 Projeto criado utilizando Vue.js, Nuxt.js e Tailwind CSS, com o objetivo de produzir um conversor de criptomoedas, permitindo que o usuário saiba a cotação do criptoativo desejado.
 
-Clique <a href="https://63c63a9de5204d6d12509bc2--beamish-youtiao-feb166.netlify.app/">aqui</a> para acessar o projeto.
+Clique <a href="https://cryptor-converter.netlify.app/">aqui</a> para acessar o projeto.
 
 
 ## Ferramentas utilizadas
@@ -32,7 +32,7 @@ Clique <a href="https://63c63a9de5204d6d12509bc2--beamish-youtiao-feb166.netlify
     $ npm run dev
 
 ## Print do Projeto
-<a href="https://63c63a9de5204d6d12509bc2--beamish-youtiao-feb166.netlify.app/">
+<a href="https://cryptor-converter.netlify.app/">
     <img src="https://user-images.githubusercontent.com/42364778/212822345-1e628d9f-63a7-4464-bbe2-cb8454335909.png">
 </a>
 
