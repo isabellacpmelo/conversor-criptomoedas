@@ -21,11 +21,16 @@ const props = defineProps({
   crypto: {
     type: Object,
     required: true,
-    validator: (obj) => obj.name && obj.asset_id && typeof obj.price_usd === "number",
+    validator: (obj) => obj && obj.name && obj.asset_id,
   },
 });
 
 const emit = defineEmits(["remove"]);
 
-const formatPrice = (price) => Number(price).toFixed(2);
+const formatPrice = (price) => {
+  if (price === undefined || price === null) {
+    return "N/A";
+  }
+  return Number(price).toFixed(2);
+};
 </script>

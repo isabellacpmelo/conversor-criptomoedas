@@ -1,3 +1,9 @@
+import { fileURLToPath } from "node:url";
+
+const appManifestStubPath = fileURLToPath(
+  new URL("./utils/app-manifest-stub.mjs", import.meta.url)
+);
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   modules: ["@nuxtjs/tailwindcss"],
@@ -22,6 +28,25 @@ export default defineNuxtConfig({
       ],
       link: [{ rel: "icon", type: "image/x-icon", href: "/favicon.ico" }],
     },
+  },
+
+  alias: {
+    // Workaround for intermittent Vite import-analysis failures resolving Nuxt virtual module.
+    "#app-manifest": appManifestStubPath,
+  },
+
+  vite: {
+    plugins: [
+      {
+        name: "resolve-app-manifest-stub",
+        enforce: "pre",
+        resolveId(id) {
+          if (id === "#app-manifest") {
+            return appManifestStubPath;
+          }
+        },
+      },
+    ],
   },
 
   compatibilityDate: "2024-11-01",

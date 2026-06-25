@@ -43,7 +43,12 @@
         </div>
 
         <!-- Form -->
-        <CryptoForm :is-loading="isLoadingCryptos" @submit="handleAddCrypto" />
+        <CryptoForm
+          :is-loading="isLoadingCryptos"
+          :all-cryptos="allCryptos"
+          :selected-cryptos="cryptoList"
+          @submit="handleAddCrypto"
+        />
 
         <!-- Initial Loading State -->
         <div v-if="isInitializing" class="text-center py-8">
@@ -77,7 +82,7 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from "vue";
-import { fetchAllCryptos, searchCrypto, isDuplicateCrypto } from "@/utils/cryptoApi.js";
+import { fetchAllCryptos, searchCrypto, isDuplicateCrypto, fetchCryptoPrice } from "@/utils/cryptoApi.js";
 
 useHead({ title: "Cryptocurrency Converter" });
 
@@ -151,6 +156,12 @@ const handleAddCrypto = async (cryptoName) => {
     const foundCrypto = searchCrypto(cryptoName, allCryptos.value);
     if (!foundCrypto) throw new Error(`Cryptocurrency "${cryptoName}" not found. Please check the name and try again.`);
 
+    // Fetch the latest price for this cryptocurrency
+    const price = await fetchCryptoPrice(foundCrypto.asset_id, apiKey);
+    if (price) {
+      foundCrypto.price_usd = price;
+    }
+
     cryptoList.value = [...cryptoList.value, foundCrypto];
     updateLastUpdateTime();
   } catch (err) {
@@ -165,12 +176,19 @@ const initializeApp = async () => {
     isInitializing.value = true;
     error.value = "";
 
-    if (!apiKey) throw new Error("API key not configured. Please check your .env.local file.");
+    if (!apiKey) throw new Error("API key not configured. Please check your .env file.");
 
     await loadAllCryptos();
 
     const bitcoin = searchCrypto("Bitcoin", allCryptos.value);
-    if (bitcoin) cryptoList.value = [bitcoin];
+    if (bitcoin) {
+      // Fetch the latest price for Bitcoin
+      const price = await fetchCryptoPrice(bitcoin.asset_id, apiKey);
+      if (price) {
+        bitcoin.price_usd = price;
+      }
+      cryptoList.value = [bitcoin];
+    }
 
     setupAutoRefresh();
     updateLastUpdateTime();
