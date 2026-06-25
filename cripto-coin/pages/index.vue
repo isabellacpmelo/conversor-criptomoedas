@@ -156,13 +156,17 @@ const handleAddCrypto = async (cryptoName) => {
     const foundCrypto = searchCrypto(cryptoName, allCryptos.value);
     if (!foundCrypto) throw new Error(`Cryptocurrency "${cryptoName}" not found. Please check the name and try again.`);
 
-    // Fetch the latest price for this cryptocurrency
-    const price = await fetchCryptoPrice(foundCrypto.asset_id, apiKey);
-    if (price) {
-      foundCrypto.price_usd = price;
+    const cryptoToAdd = { ...foundCrypto };
+
+    // Keep API list price when available; otherwise try asset-specific lookup.
+    if (!Number.isFinite(Number(cryptoToAdd.price_usd)) || Number(cryptoToAdd.price_usd) <= 0) {
+      const price = await fetchCryptoPrice(cryptoToAdd.asset_id, apiKey);
+      if (Number.isFinite(Number(price)) && Number(price) > 0) {
+        cryptoToAdd.price_usd = Number(price);
+      }
     }
 
-    cryptoList.value = [...cryptoList.value, foundCrypto];
+    cryptoList.value = [...cryptoList.value, cryptoToAdd];
     updateLastUpdateTime();
   } catch (err) {
     handleError(err);
@@ -182,12 +186,17 @@ const initializeApp = async () => {
 
     const bitcoin = searchCrypto("Bitcoin", allCryptos.value);
     if (bitcoin) {
-      // Fetch the latest price for Bitcoin
-      const price = await fetchCryptoPrice(bitcoin.asset_id, apiKey);
-      if (price) {
-        bitcoin.price_usd = price;
+      const initialBitcoin = { ...bitcoin };
+
+      // Ensure initial card starts with a valid price.
+      if (!Number.isFinite(Number(initialBitcoin.price_usd)) || Number(initialBitcoin.price_usd) <= 0) {
+        const price = await fetchCryptoPrice(initialBitcoin.asset_id, apiKey);
+        if (Number.isFinite(Number(price)) && Number(price) > 0) {
+          initialBitcoin.price_usd = Number(price);
+        }
       }
-      cryptoList.value = [bitcoin];
+
+      cryptoList.value = [initialBitcoin];
     }
 
     setupAutoRefresh();

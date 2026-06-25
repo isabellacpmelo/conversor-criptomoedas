@@ -63,6 +63,15 @@ export function normalizeText(text = "") {
     .trim();
 }
 
+function hasValidPrice(value) {
+  return Number.isFinite(Number(value)) && Number(value) > 0;
+}
+
+function getQuoteTimestamp(value) {
+  const timestamp = Date.parse(value || "");
+  return Number.isFinite(timestamp) ? timestamp : 0;
+}
+
 /**
  * Search for a specific cryptocurrency by name
  * @param {string} cryptoName - Name to search for
@@ -76,14 +85,45 @@ export function searchCrypto(cryptoName, allCryptos) {
 
   const normalizedQuery = normalizeText(cryptoName);
 
-  return (
-    allCryptos.find((crypto) => {
-      const normalizedName = normalizeText(crypto.name);
-      const normalizedSymbol = normalizeText(crypto.asset_id);
+  const matches = allCryptos.filter((crypto) => {
+    if (!crypto || typeof crypto !== "object") {
+      return false;
+    }
 
-      return normalizedName === normalizedQuery || normalizedSymbol === normalizedQuery;
-    }) || null
-  );
+    const normalizedName = normalizeText(crypto.name);
+    const normalizedSymbol = normalizeText(crypto.asset_id);
+    return normalizedName === normalizedQuery || normalizedSymbol === normalizedQuery;
+  });
+
+  if (!matches.length) {
+    return null;
+  }
+
+  matches.sort((left, right) => {
+    const leftIsCrypto = Number(left.type_is_crypto) === 1 ? 1 : 0;
+    const rightIsCrypto = Number(right.type_is_crypto) === 1 ? 1 : 0;
+    if (leftIsCrypto !== rightIsCrypto) {
+      return rightIsCrypto - leftIsCrypto;
+    }
+
+    const leftHasPrice = hasValidPrice(left.price_usd) ? 1 : 0;
+    const rightHasPrice = hasValidPrice(right.price_usd) ? 1 : 0;
+    if (leftHasPrice !== rightHasPrice) {
+      return rightHasPrice - leftHasPrice;
+    }
+
+    const leftQuote = getQuoteTimestamp(left.data_quote_end);
+    const rightQuote = getQuoteTimestamp(right.data_quote_end);
+    if (leftQuote !== rightQuote) {
+      return rightQuote - leftQuote;
+    }
+
+    const leftName = normalizeText(left.name || left.asset_id || "");
+    const rightName = normalizeText(right.name || right.asset_id || "");
+    return leftName.localeCompare(rightName);
+  });
+
+  return matches[0];
 }
 
 /**
@@ -114,6 +154,10 @@ export function getCryptoSuggestions(query, allCryptos, selectedCryptos = [], li
   const rankedMatches = allCryptos
     .filter((crypto) => {
       if (!crypto || typeof crypto !== "object") {
+        return false;
+      }
+
+      if (Number(crypto.type_is_crypto) !== 1) {
         return false;
       }
 
@@ -156,6 +200,18 @@ export function getCryptoSuggestions(query, allCryptos, selectedCryptos = [], li
         return left.score - right.score;
       }
 
+      const leftHasPrice = hasValidPrice(left.crypto?.price_usd) ? 1 : 0;
+      const rightHasPrice = hasValidPrice(right.crypto?.price_usd) ? 1 : 0;
+      if (leftHasPrice !== rightHasPrice) {
+        return rightHasPrice - leftHasPrice;
+      }
+
+      const leftQuote = getQuoteTimestamp(left.crypto?.data_quote_end);
+      const rightQuote = getQuoteTimestamp(right.crypto?.data_quote_end);
+      if (leftQuote !== rightQuote) {
+        return rightQuote - leftQuote;
+      }
+
       const leftName = normalizeText(left.crypto?.name || left.crypto?.asset_id || "");
       const rightName = normalizeText(right.crypto?.name || right.crypto?.asset_id || "");
       return leftName.localeCompare(rightName);
@@ -181,15 +237,12 @@ export async function fetchCryptoPrice(assetId, apiKey) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
 
-    const response = await fetch(
-      `${API_BASE_URL}/exchangerate/${assetId}/USD`,
-      {
-        headers: {
-          "X-CoinAPI-Key": apiKey,
-        },
-        signal: controller.signal,
-      }
-    );
+    const response = await fetch(`${API_BASE_URL}/assets/${assetId}`, {
+      headers: {
+        "X-CoinAPI-Key": apiKey,
+      },
+      signal: controller.signal,
+    });
 
     clearTimeout(timeoutId);
 
@@ -198,9 +251,14 @@ export async function fetchCryptoPrice(assetId, apiKey) {
     }
 
     const data = await response.json();
-    return data.rate || null;
+    if (Array.isArray(data)) {
+      const asset = data.find((item) => normalizeText(item?.asset_id) === normalizeText(assetId)) || data[0];
+      return hasValidPrice(asset?.price_usd) ? Number(asset.price_usd) : null;
+    }
+
+    return hasValidPrice(data?.price_usd) ? Number(data.price_usd) : null;
   } catch (error) {
-    console.warn(`Failed to fetch price for ${assetId}:`, error);
+    console.warn(`Failed to fetch asset price for ${assetId}:`, error);
     return null;
   }
 }
