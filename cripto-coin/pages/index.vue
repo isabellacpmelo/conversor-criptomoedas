@@ -73,7 +73,16 @@
         <!-- Last Update -->
         <div v-if="cryptoList.length > 0 && !isInitializing" class="mt-8 text-center text-sm text-gray-300">
           <p>Last updated: {{ lastUpdateTime }}</p>
-          <p class="text-xs mt-1">Updates every 60 seconds</p>
+          <p class="text-xs mt-1">Updates every 1 hour</p>
+          <button
+            type="button"
+            class="mt-3 rounded-lg bg-white/20 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/30 disabled:cursor-not-allowed disabled:opacity-60"
+            :disabled="isRefreshingPrices"
+            @click="refreshCryptoPrices"
+          >
+            <span v-if="isRefreshingPrices">Refreshing...</span>
+            <span v-else>Refresh now</span>
+          </button>
         </div>
       </div>
     </div>
@@ -93,9 +102,12 @@ const allCryptos = ref([]);
 const cryptoList = ref([]);
 const isLoadingCryptos = ref(false);
 const isInitializing = ref(true);
+const isRefreshingPrices = ref(false);
 const error = ref("");
 const lastUpdateTime = ref("");
 let refreshInterval = null;
+
+const hasValidPrice = (value) => Number.isFinite(Number(value)) && Number(value) > 0;
 
 const updateLastUpdateTime = () => {
   const now = new Date();
@@ -116,8 +128,40 @@ const clearRefreshInterval = () => {
 const setupAutoRefresh = () => {
   clearRefreshInterval();
   refreshInterval = setInterval(() => {
+    refreshCryptoPrices();
+  }, 3600000);
+};
+
+const refreshCryptoPrices = async () => {
+  if (!cryptoList.value.length || isRefreshingPrices.value) {
+    return;
+  }
+
+  try {
+    isRefreshingPrices.value = true;
+
+    const refreshedList = await Promise.all(
+      cryptoList.value.map(async (crypto) => {
+        if (!crypto || !crypto.asset_id) {
+          return crypto;
+        }
+
+        const latestPrice = await fetchCryptoPrice(crypto.asset_id, apiKey);
+        if (hasValidPrice(latestPrice)) {
+          return { ...crypto, price_usd: Number(latestPrice) };
+        }
+
+        return crypto;
+      })
+    );
+
+    cryptoList.value = refreshedList;
     updateLastUpdateTime();
-  }, 60000);
+  } catch (err) {
+    console.warn("Failed to refresh crypto prices:", err);
+  } finally {
+    isRefreshingPrices.value = false;
+  }
 };
 
 const handleError = (err) => {
@@ -159,9 +203,9 @@ const handleAddCrypto = async (cryptoName) => {
     const cryptoToAdd = { ...foundCrypto };
 
     // Keep API list price when available; otherwise try asset-specific lookup.
-    if (!Number.isFinite(Number(cryptoToAdd.price_usd)) || Number(cryptoToAdd.price_usd) <= 0) {
+    if (!hasValidPrice(cryptoToAdd.price_usd)) {
       const price = await fetchCryptoPrice(cryptoToAdd.asset_id, apiKey);
-      if (Number.isFinite(Number(price)) && Number(price) > 0) {
+      if (hasValidPrice(price)) {
         cryptoToAdd.price_usd = Number(price);
       }
     }
@@ -189,9 +233,9 @@ const initializeApp = async () => {
       const initialBitcoin = { ...bitcoin };
 
       // Ensure initial card starts with a valid price.
-      if (!Number.isFinite(Number(initialBitcoin.price_usd)) || Number(initialBitcoin.price_usd) <= 0) {
+      if (!hasValidPrice(initialBitcoin.price_usd)) {
         const price = await fetchCryptoPrice(initialBitcoin.asset_id, apiKey);
-        if (Number.isFinite(Number(price)) && Number(price) > 0) {
+        if (hasValidPrice(price)) {
           initialBitcoin.price_usd = Number(price);
         }
       }
