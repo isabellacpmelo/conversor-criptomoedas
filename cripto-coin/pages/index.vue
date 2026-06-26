@@ -272,6 +272,8 @@ const setupAutoRefresh = () => {
   }, 3600000);
 };
 
+const hasMarketSnapshot = () => marketSnapshotStorage.read().length > 0;
+
 const refreshCryptoPrices = async () => {
   if (!cryptoList.value.length || isRefreshingPrices.value) {
     return;
@@ -314,11 +316,19 @@ const dismissError = () => {
   error.value = "";
 };
 
-const loadAllCryptos = async () => {
+const loadAllCryptos = async ({ bootstrapMovers = false } = {}) => {
   isLoadingCryptos.value = true;
   try {
+    const snapshotExistsBeforeLoad = hasMarketSnapshot();
+
     allCryptos.value = await fetchAllCryptos(apiKey);
     buildMarketChangeList();
+
+    if (bootstrapMovers && !snapshotExistsBeforeLoad) {
+      // First run: perform one additional load to compare against the first snapshot.
+      allCryptos.value = await fetchAllCryptos(apiKey);
+      buildMarketChangeList();
+    }
   } catch (err) {
     throw new Error(`Failed to load cryptocurrencies: ${err.message}`);
   } finally {
@@ -377,7 +387,7 @@ const initializeApp = async () => {
 
     if (!apiKey) throw new Error("API key not configured. Please check your .env file.");
 
-    await loadAllCryptos();
+    await loadAllCryptos({ bootstrapMovers: true });
 
     const savedCryptos = historyStorage.read();
     const restoredCryptos = hydrateSavedCryptos(savedCryptos);
