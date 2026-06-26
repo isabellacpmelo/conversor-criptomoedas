@@ -131,6 +131,7 @@
 import { ref, onMounted, onBeforeUnmount } from "vue";
 import { fetchAllCryptos, searchCrypto, isDuplicateCrypto, fetchCryptoPrice } from "@/utils/cryptoApi.js";
 import { useThemePreference } from "@/composables/useThemePreference";
+import { useCryptoHistoryStorage } from "@/composables/useCryptoHistoryStorage";
 
 useHead({ title: "Cryptocurrency Converter" });
 
@@ -147,8 +148,42 @@ const lastUpdateTime = ref("");
 let refreshInterval = null;
 
 const { isDarkTheme, initializeTheme, toggleTheme } = useThemePreference();
+const { historyStorage } = useCryptoHistoryStorage();
 
 const hasValidPrice = (value) => Number.isFinite(Number(value)) && Number(value) > 0;
+
+const syncCryptoHistory = () => {
+  historyStorage.write(cryptoList.value);
+};
+
+const hydrateSavedCryptos = (savedCryptos = []) => {
+  if (!Array.isArray(savedCryptos) || !savedCryptos.length) {
+    return [];
+  }
+
+  return savedCryptos
+    .map((savedCrypto) => {
+      if (!savedCrypto || !savedCrypto.asset_id) {
+        return null;
+      }
+
+      const apiCrypto = allCryptos.value.find(
+        (crypto) => String(crypto?.asset_id || "").toUpperCase() === String(savedCrypto.asset_id).toUpperCase()
+      );
+
+      const hydratedCrypto = apiCrypto ? { ...apiCrypto } : { ...savedCrypto };
+      if (!hydratedCrypto.name) {
+        hydratedCrypto.name = savedCrypto.name || savedCrypto.asset_id;
+      }
+
+      if (!hasValidPrice(hydratedCrypto.price_usd) && hasValidPrice(savedCrypto.price_usd)) {
+        hydratedCrypto.price_usd = Number(savedCrypto.price_usd);
+      }
+
+      return hydratedCrypto;
+    })
+    .filter(Boolean);
+};
 
 const updateLastUpdateTime = () => {
   const now = new Date();
@@ -198,6 +233,7 @@ const refreshCryptoPrices = async () => {
 
     cryptoList.value = refreshedList;
     updateLastUpdateTime();
+    syncCryptoHistory();
   } catch (err) {
     console.warn("Failed to refresh crypto prices:", err);
   } finally {
@@ -228,6 +264,7 @@ const loadAllCryptos = async () => {
 const removeCrypto = (cryptoName) => {
   cryptoList.value = cryptoList.value.filter((crypto) => crypto.name !== cryptoName);
   updateLastUpdateTime();
+  syncCryptoHistory();
 };
 
 const handleAddCrypto = async (cryptoName) => {
@@ -253,6 +290,7 @@ const handleAddCrypto = async (cryptoName) => {
 
     cryptoList.value = [...cryptoList.value, cryptoToAdd];
     updateLastUpdateTime();
+    syncCryptoHistory();
   } catch (err) {
     handleError(err);
   } finally {
@@ -269,19 +307,28 @@ const initializeApp = async () => {
 
     await loadAllCryptos();
 
-    const bitcoin = searchCrypto("Bitcoin", allCryptos.value);
-    if (bitcoin) {
-      const initialBitcoin = { ...bitcoin };
+    const savedCryptos = historyStorage.read();
+    const restoredCryptos = hydrateSavedCryptos(savedCryptos);
 
-      // Ensure initial card starts with a valid price.
-      if (!hasValidPrice(initialBitcoin.price_usd)) {
-        const price = await fetchCryptoPrice(initialBitcoin.asset_id, apiKey);
-        if (hasValidPrice(price)) {
-          initialBitcoin.price_usd = Number(price);
+    if (restoredCryptos.length) {
+      cryptoList.value = restoredCryptos;
+      await refreshCryptoPrices();
+    } else {
+      const bitcoin = searchCrypto("Bitcoin", allCryptos.value);
+      if (bitcoin) {
+        const initialBitcoin = { ...bitcoin };
+
+        // Ensure initial card starts with a valid price.
+        if (!hasValidPrice(initialBitcoin.price_usd)) {
+          const price = await fetchCryptoPrice(initialBitcoin.asset_id, apiKey);
+          if (hasValidPrice(price)) {
+            initialBitcoin.price_usd = Number(price);
+          }
         }
-      }
 
-      cryptoList.value = [initialBitcoin];
+        cryptoList.value = [initialBitcoin];
+        syncCryptoHistory();
+      }
     }
 
     setupAutoRefresh();
