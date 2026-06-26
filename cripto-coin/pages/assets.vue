@@ -100,19 +100,35 @@
             </select>
           </div>
         </div>
+
+        <div class="mt-4 flex items-center gap-3">
+          <input
+            id="include-no-price"
+            v-model="includeNoPriceAssets"
+            type="checkbox"
+            class="h-4 w-4 rounded border-white/20 bg-transparent text-sky-400"
+          />
+          <label for="include-no-price" class="theme-text-subtle text-xs font-semibold uppercase tracking-[0.18em]">
+            Include assets without price (N/A)
+          </label>
+        </div>
       </section>
 
       <section class="theme-surface rounded-2xl border p-3 md:p-4">
         <div class="mb-3 flex items-center justify-between gap-2">
           <p class="theme-text-muted text-xs uppercase tracking-[0.2em]">
-            Showing {{ visibleAssets.length }} of {{ filteredAssets.length }} assets
+            Showing {{ pagedAssets.length }} of {{ filteredAssets.length }} assets
           </p>
           <p class="theme-text-subtle text-xs uppercase tracking-[0.2em]">Page {{ currentPage }} / {{ totalPages }}</p>
         </div>
 
-        <div class="overflow-x-auto">
+        <div
+          ref="tableScrollRef"
+          class="max-h-[560px] overflow-auto"
+          @scroll="handleTableScroll"
+        >
           <table class="w-full min-w-[680px] border-collapse text-left">
-            <thead>
+            <thead class="sticky top-0 z-10 backdrop-blur">
               <tr class="theme-text-subtle border-b border-white/10 text-xs uppercase tracking-[0.18em]">
                 <th class="px-3 py-3 font-semibold">Name</th>
                 <th class="px-3 py-3 font-semibold">Symbol</th>
@@ -121,8 +137,12 @@
               </tr>
             </thead>
             <tbody>
+              <tr v-if="topSpacerHeight > 0" aria-hidden="true">
+                <td colspan="4" :style="{ height: `${topSpacerHeight}px` }"></td>
+              </tr>
+
               <tr
-                v-for="asset in visibleAssets"
+                v-for="asset in virtualRows"
                 :key="asset.asset_id"
                 class="border-b border-white/5 text-sm last:border-b-0"
               >
@@ -139,6 +159,10 @@
                   </span>
                 </td>
               </tr>
+
+              <tr v-if="bottomSpacerHeight > 0" aria-hidden="true">
+                <td colspan="4" :style="{ height: `${bottomSpacerHeight}px` }"></td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -152,6 +176,26 @@
           >
             Previous
           </button>
+
+          <div class="flex flex-wrap items-center justify-center gap-2">
+            <button
+              v-for="item in paginationItems"
+              :key="`page-item-${item}`"
+              type="button"
+              class="rounded-lg border px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em]"
+              :class="
+                item === currentPage
+                  ? 'theme-primary-btn border-transparent'
+                  : item === '...'
+                    ? 'theme-text-subtle border-transparent'
+                    : 'theme-secondary-btn border'
+              "
+              :disabled="item === '...'"
+              @click="typeof item === 'number' ? (currentPage = item) : null"
+            >
+              {{ item }}
+            </button>
+          </div>
 
           <button
             type="button"
@@ -168,7 +212,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch, onMounted } from "vue";
+import { computed, ref, watch, onMounted, nextTick } from "vue";
 import { fetchAllCryptos, normalizeText } from "@/utils/cryptoApi.js";
 import { useThemePreference } from "@/composables/useThemePreference";
 import { useMarketSnapshotStorage } from "@/composables/useMarketSnapshotStorage";
@@ -186,6 +230,9 @@ const searchQuery = ref("");
 const sortBy = ref("change_desc");
 const currentPage = ref(1);
 const itemsPerPage = ref(50);
+const includeNoPriceAssets = ref(false);
+const tableScrollRef = ref(null);
+const tableScrollTop = ref(0);
 
 const { isDarkTheme, initializeTheme, toggleTheme } = useThemePreference();
 const { marketSnapshotStorage } = useMarketSnapshotStorage();
@@ -228,11 +275,15 @@ const loadAssets = async () => {
 
 const filteredAssets = computed(() => {
   const query = normalizeText(searchQuery.value);
+  const filteredByPrice = includeNoPriceAssets.value
+    ? assets.value
+    : assets.value.filter((asset) => hasValidPrice(asset.price_usd));
+
   if (!query) {
-    return assets.value;
+    return filteredByPrice;
   }
 
-  return assets.value.filter((asset) => {
+  return filteredByPrice.filter((asset) => {
     const normalizedName = normalizeText(asset.name);
     const normalizedSymbol = normalizeText(asset.asset_id);
     return normalizedName.includes(query) || normalizedSymbol.includes(query);
@@ -270,10 +321,67 @@ const sortedAssets = computed(() => {
 
 const totalPages = computed(() => Math.max(1, Math.ceil(sortedAssets.value.length / itemsPerPage.value)));
 
-const visibleAssets = computed(() => {
+const pagedAssets = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value;
   return sortedAssets.value.slice(start, start + itemsPerPage.value);
 });
+
+const ROW_HEIGHT = 54;
+const VIRTUAL_OVERSCAN = 6;
+const VIEWPORT_HEIGHT = 560;
+
+const virtualVisibleCount = computed(
+  () => Math.ceil(VIEWPORT_HEIGHT / ROW_HEIGHT) + VIRTUAL_OVERSCAN * 2
+);
+
+const virtualStartIndex = computed(() => {
+  const base = Math.floor(tableScrollTop.value / ROW_HEIGHT) - VIRTUAL_OVERSCAN;
+  return Math.max(0, base);
+});
+
+const virtualEndIndex = computed(() =>
+  Math.min(pagedAssets.value.length, virtualStartIndex.value + virtualVisibleCount.value)
+);
+
+const virtualRows = computed(() =>
+  pagedAssets.value.slice(virtualStartIndex.value, virtualEndIndex.value)
+);
+
+const topSpacerHeight = computed(() => virtualStartIndex.value * ROW_HEIGHT);
+
+const bottomSpacerHeight = computed(
+  () => (pagedAssets.value.length - virtualEndIndex.value) * ROW_HEIGHT
+);
+
+const buildPaginationItems = (page, pages) => {
+  if (pages <= 7) {
+    return Array.from({ length: pages }, (_, index) => index + 1);
+  }
+
+  if (page <= 4) {
+    return [1, 2, 3, 4, 5, "...", pages];
+  }
+
+  if (page >= pages - 3) {
+    return [1, "...", pages - 4, pages - 3, pages - 2, pages - 1, pages];
+  }
+
+  return [1, "...", page - 1, page, page + 1, "...", pages];
+};
+
+const paginationItems = computed(() => buildPaginationItems(currentPage.value, totalPages.value));
+
+const resetVirtualScroll = async () => {
+  tableScrollTop.value = 0;
+  await nextTick();
+  if (tableScrollRef.value) {
+    tableScrollRef.value.scrollTop = 0;
+  }
+};
+
+const handleTableScroll = (event) => {
+  tableScrollTop.value = event.target?.scrollTop || 0;
+};
 
 const formatPrice = (price) => {
   if (!hasValidPrice(price)) {
@@ -333,14 +441,19 @@ const getMovementLabel = (change) => {
   return "Stable";
 };
 
-watch([searchQuery, sortBy, itemsPerPage], () => {
+watch([searchQuery, sortBy, itemsPerPage, includeNoPriceAssets], () => {
   currentPage.value = 1;
+  resetVirtualScroll();
 });
 
 watch(totalPages, (pages) => {
   if (currentPage.value > pages) {
     currentPage.value = pages;
   }
+});
+
+watch(currentPage, () => {
+  resetVirtualScroll();
 });
 
 onMounted(async () => {
