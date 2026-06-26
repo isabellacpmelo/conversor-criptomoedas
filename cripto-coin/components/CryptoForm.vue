@@ -161,6 +161,21 @@ const moveActiveSuggestion = (direction) => {
   }
 };
 
+const findExactSuggestedCrypto = () => {
+  const normalizedInput = cryptoInput.value.trim().toLowerCase();
+  if (!normalizedInput) {
+    return null;
+  }
+
+  return (
+    suggestions.value.find((suggestion) => {
+      const symbol = String(suggestion.asset_id || "").trim().toLowerCase();
+      const name = String(suggestion.name || "").trim().toLowerCase();
+      return symbol === normalizedInput || name === normalizedInput;
+    }) || null
+  );
+};
+
 const handleSubmit = () => {
   errorMessage.value = "";
 
@@ -174,9 +189,13 @@ const handleSubmit = () => {
     return;
   }
 
-  emit("submit", cryptoInput.value.trim());
-  cryptoInput.value = "";
-  closeSuggestions();
+  const exactSuggestedCrypto = findExactSuggestedCrypto();
+  if (!exactSuggestedCrypto) {
+    globalThis.alert("A moeda informada não existe na lista de sugestões.");
+    return;
+  }
+
+  selectSuggestion(exactSuggestedCrypto);
 };
 
 watch(
