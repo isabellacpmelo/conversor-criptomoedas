@@ -1,5 +1,7 @@
 <template>
   <div class="relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
+    <LoadingScreen v-if="isInitializing" />
+
     <div class="pointer-events-none absolute inset-0">
       <div class="absolute left-[-8rem] top-10 h-72 w-72 rounded-full bg-sky-500/15 blur-3xl"></div>
       <div class="absolute bottom-0 right-[-6rem] h-80 w-80 rounded-full bg-cyan-300/10 blur-3xl"></div>
@@ -83,19 +85,8 @@
           @submit="handleAddCrypto"
         />
 
-        <!-- Initial Loading State -->
-        <div v-if="isInitializing" class="py-10 text-center">
-          <div class="flex flex-col items-center gap-4">
-            <svg class="h-12 w-12 animate-spin text-sky-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <p class="theme-text-muted text-lg">Initializing application...</p>
-          </div>
-        </div>
-
         <!-- Crypto List -->
-        <div v-else class="w-full max-w-3xl">
+        <div class="w-full max-w-3xl">
           <CryptoList
             :crypto-list="cryptoList"
             :is-loading="isLoadingCryptos"
