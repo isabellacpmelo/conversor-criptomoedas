@@ -8,6 +8,7 @@
           </label>
         <input
           id="crypto-search"
+          ref="searchInputRef"
           v-model="cryptoInput"
           class="w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-4 text-left text-base font-medium text-slate-100 shadow-inner shadow-slate-950/40 transition duration-150 ease-in-out placeholder:text-slate-500 focus:border-sky-300/50 focus:ring-4 focus:ring-sky-300/15 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
           type="text"
@@ -98,7 +99,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import AppModal from "@/components/AppModal.vue";
 import { getCryptoSuggestions } from "@/utils/cryptoApi.js";
 
@@ -124,6 +125,7 @@ const errorMessage = ref("");
 const isFocused = ref(false);
 const activeSuggestionIndex = ref(-1);
 const showNotFoundModal = ref(false);
+const searchInputRef = ref(null);
 
 const suggestions = computed(() =>
   getCryptoSuggestions(cryptoInput.value, props.allCryptos, props.selectedCryptos)
@@ -142,8 +144,10 @@ const openNotFoundModal = () => {
   showNotFoundModal.value = true;
 };
 
-const closeNotFoundModal = () => {
+const closeNotFoundModal = async () => {
   showNotFoundModal.value = false;
+  await nextTick();
+  searchInputRef.value?.focus();
 };
 
 const handleFocus = () => {

@@ -27,6 +27,8 @@
 </template>
 
 <script setup>
+import { onBeforeUnmount, watch } from "vue";
+
 const props = defineProps({
   isOpen: {
     type: Boolean,
@@ -50,5 +52,27 @@ const props = defineProps({
   },
 });
 
-defineEmits(["close"]);
+const emit = defineEmits(["close"]);
+
+const handleEscKey = (event) => {
+  if (event.key === "Escape") {
+    emit("close");
+  }
+};
+
+watch(
+  () => props.isOpen,
+  (isOpen) => {
+    if (isOpen) {
+      document.addEventListener("keydown", handleEscKey);
+      return;
+    }
+
+    document.removeEventListener("keydown", handleEscKey);
+  }
+);
+
+onBeforeUnmount(() => {
+  document.removeEventListener("keydown", handleEscKey);
+});
 </script>
