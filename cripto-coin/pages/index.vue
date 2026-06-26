@@ -5,7 +5,7 @@
       <div class="absolute bottom-0 right-[-6rem] h-80 w-80 rounded-full bg-cyan-300/10 blur-3xl"></div>
     </div>
 
-    <div class="theme-shell relative mx-auto max-w-5xl rounded-[32px] border p-6 shadow-[0_24px_80px_rgba(2,6,23,0.55)] backdrop-blur-xl md:p-10">
+    <div class="relative mx-auto flex max-w-5xl flex-col items-center px-1 md:px-2">
       <div class="flex flex-col items-center">
         <div class="mb-6 flex w-full justify-end">
           <button
