@@ -12,6 +12,13 @@
     <div class="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-center sm:mx-4 sm:min-w-[170px]">
       <p class="text-[11px] uppercase tracking-[0.22em] text-slate-500">Current price</p>
       <strong class="mt-1 block text-2xl text-sky-200">${{ formatPrice(crypto.price_usd) }}</strong>
+      <p
+        class="mt-2 inline-flex items-center justify-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]"
+        :class="trendClasses"
+      >
+        <span aria-hidden="true">{{ trendIcon }}</span>
+        <span>{{ trendLabel }}</span>
+      </p>
     </div>
     <button
       class="rounded-xl border border-rose-400/20 bg-rose-500/12 px-4 py-2 font-semibold text-rose-100 transition duration-200 ease-in-out hover:bg-rose-500/20"
@@ -23,6 +30,8 @@
 </template>
 
 <script setup>
+import { computed } from "vue";
+
 const props = defineProps({
   crypto: {
     type: Object,
@@ -32,6 +41,46 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["remove"]);
+
+const hasChangeValue = computed(
+  () => Number.isFinite(Number(props.crypto?.price_change_percentage_24h))
+);
+
+const trendValue = computed(() => props.crypto?.price_trend || "neutral");
+
+const trendIcon = computed(() => {
+  if (trendValue.value === "up") {
+    return "▲";
+  }
+  if (trendValue.value === "down") {
+    return "▼";
+  }
+  return "●";
+});
+
+const trendLabel = computed(() => {
+  if (trendValue.value === "up" && hasChangeValue.value) {
+    return `UP ${Math.abs(Number(props.crypto.price_change_percentage_24h)).toFixed(2)}%`;
+  }
+
+  if (trendValue.value === "down" && hasChangeValue.value) {
+    return `DOWN ${Math.abs(Number(props.crypto.price_change_percentage_24h)).toFixed(2)}%`;
+  }
+
+  return "STABLE";
+});
+
+const trendClasses = computed(() => {
+  if (trendValue.value === "up") {
+    return "bg-emerald-500/15 text-emerald-300";
+  }
+
+  if (trendValue.value === "down") {
+    return "bg-rose-500/15 text-rose-300";
+  }
+
+  return "bg-slate-500/20 text-slate-300";
+});
 
 const formatPrice = (price) => {
   if (price === undefined || price === null) {

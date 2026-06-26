@@ -143,6 +143,36 @@ const { historyStorage } = useCryptoHistoryStorage();
 
 const hasValidPrice = (value) => Number.isFinite(Number(value)) && Number(value) > 0;
 
+const addTrendMetadata = (crypto, nextPrice, previousPriceFallback = null) => {
+  const previousPrice = hasValidPrice(previousPriceFallback)
+    ? Number(previousPriceFallback)
+    : hasValidPrice(crypto?.price_usd)
+      ? Number(crypto.price_usd)
+      : null;
+
+  const normalizedNextPrice = hasValidPrice(nextPrice) ? Number(nextPrice) : null;
+
+  let trend = "neutral";
+  let changePercentage = null;
+
+  if (hasValidPrice(normalizedNextPrice) && hasValidPrice(previousPrice) && previousPrice > 0) {
+    const delta = normalizedNextPrice - previousPrice;
+    const computedChange = (delta / previousPrice) * 100;
+    if (delta !== 0) {
+      trend = computedChange > 0 ? "up" : "down";
+      changePercentage = computedChange;
+    }
+  }
+
+  return {
+    ...crypto,
+    price_usd: normalizedNextPrice ?? crypto?.price_usd ?? null,
+    previous_price_usd: previousPrice,
+    price_change_percentage_24h: changePercentage,
+    price_trend: trend,
+  };
+};
+
 const syncCryptoHistory = () => {
   historyStorage.write(cryptoList.value);
 };
@@ -170,6 +200,18 @@ const hydrateSavedCryptos = (savedCryptos = []) => {
       if (!hasValidPrice(hydratedCrypto.price_usd) && hasValidPrice(savedCrypto.price_usd)) {
         hydratedCrypto.price_usd = Number(savedCrypto.price_usd);
       }
+
+      hydratedCrypto.previous_price_usd = hasValidPrice(savedCrypto.previous_price_usd)
+        ? Number(savedCrypto.previous_price_usd)
+        : null;
+
+      hydratedCrypto.price_change_percentage_24h = Number.isFinite(Number(savedCrypto.price_change_percentage_24h))
+        ? Number(savedCrypto.price_change_percentage_24h)
+        : null;
+
+      hydratedCrypto.price_trend = ["up", "down", "neutral"].includes(savedCrypto.price_trend)
+        ? savedCrypto.price_trend
+        : "neutral";
 
       return hydratedCrypto;
     })
@@ -215,7 +257,7 @@ const refreshCryptoPrices = async () => {
 
         const latestPrice = await fetchCryptoPrice(crypto.asset_id, apiKey);
         if (hasValidPrice(latestPrice)) {
-          return { ...crypto, price_usd: Number(latestPrice) };
+          return addTrendMetadata(crypto, Number(latestPrice), crypto.price_usd);
         }
 
         return crypto;
@@ -279,7 +321,14 @@ const handleAddCrypto = async (cryptoName) => {
       }
     }
 
-    cryptoList.value = [...cryptoList.value, cryptoToAdd];
+    const cryptoWithTrend = {
+      ...cryptoToAdd,
+      previous_price_usd: null,
+      price_change_percentage_24h: null,
+      price_trend: "neutral",
+    };
+
+    cryptoList.value = [...cryptoList.value, cryptoWithTrend];
     updateLastUpdateTime();
     syncCryptoHistory();
   } catch (err) {
@@ -316,6 +365,10 @@ const initializeApp = async () => {
             initialBitcoin.price_usd = Number(price);
           }
         }
+
+        initialBitcoin.previous_price_usd = null;
+        initialBitcoin.price_change_percentage_24h = null;
+        initialBitcoin.price_trend = "neutral";
 
         cryptoList.value = [initialBitcoin];
         syncCryptoHistory();

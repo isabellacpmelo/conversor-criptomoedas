@@ -20,6 +20,11 @@ const normalizeHistoryItem = (item) => {
     asset_id: assetId,
     name,
     price_usd: hasValidPrice(item.price_usd) ? Number(item.price_usd) : null,
+    previous_price_usd: hasValidPrice(item.previous_price_usd) ? Number(item.previous_price_usd) : null,
+    price_change_percentage_24h: Number.isFinite(Number(item.price_change_percentage_24h))
+      ? Number(item.price_change_percentage_24h)
+      : null,
+    price_trend: ["up", "down", "neutral"].includes(item.price_trend) ? item.price_trend : "neutral",
   };
 };
 
