@@ -94,6 +94,10 @@
           />
         </div>
 
+        <div v-if="!isInitializing" class="mt-4 w-full max-w-3xl">
+          <TopMoversWidget :assets="allCryptosWithMarketChange" />
+        </div>
+
         <!-- Last Update -->
         <div v-if="cryptoList.length > 0 && !isInitializing" class="theme-text-muted mt-8 flex w-full max-w-3xl flex-col items-center justify-between gap-4 px-1 py-1 text-sm md:flex-row">
           <div class="text-center md:text-left">
@@ -123,6 +127,7 @@ import { ref, onMounted, onBeforeUnmount } from "vue";
 import { fetchAllCryptos, searchCrypto, isDuplicateCrypto, fetchCryptoPrice } from "@/utils/cryptoApi.js";
 import { useThemePreference } from "@/composables/useThemePreference";
 import { useCryptoHistoryStorage } from "@/composables/useCryptoHistoryStorage";
+import { useMarketSnapshotStorage } from "@/composables/useMarketSnapshotStorage";
 
 useHead({ title: "Cryptocurrency Converter" });
 
@@ -130,6 +135,7 @@ const config = useRuntimeConfig();
 const apiKey = config.public.cryptoApiKey;
 
 const allCryptos = ref([]);
+const allCryptosWithMarketChange = ref([]);
 const cryptoList = ref([]);
 const isLoadingCryptos = ref(false);
 const isInitializing = ref(true);
@@ -140,6 +146,7 @@ let refreshInterval = null;
 
 const { isDarkTheme, initializeTheme, toggleTheme } = useThemePreference();
 const { historyStorage } = useCryptoHistoryStorage();
+const { marketSnapshotStorage } = useMarketSnapshotStorage();
 
 const hasValidPrice = (value) => Number.isFinite(Number(value)) && Number(value) > 0;
 
@@ -218,6 +225,30 @@ const hydrateSavedCryptos = (savedCryptos = []) => {
     .filter(Boolean);
 };
 
+const buildMarketChangeList = () => {
+  const previousSnapshot = marketSnapshotStorage.read();
+  const previousPriceMap = new Map(
+    previousSnapshot.map((asset) => [String(asset.asset_id || "").toUpperCase(), Number(asset.price_usd)])
+  );
+
+  allCryptosWithMarketChange.value = allCryptos.value.map((asset) => {
+    const currentPrice = Number(asset?.price_usd);
+    const previousPrice = previousPriceMap.get(String(asset?.asset_id || "").toUpperCase());
+
+    let marketChangePercentage = null;
+    if (hasValidPrice(currentPrice) && hasValidPrice(previousPrice) && previousPrice > 0) {
+      marketChangePercentage = ((currentPrice - previousPrice) / previousPrice) * 100;
+    }
+
+    return {
+      ...asset,
+      market_change_percentage: marketChangePercentage,
+    };
+  });
+
+  marketSnapshotStorage.write(allCryptos.value);
+};
+
 const updateLastUpdateTime = () => {
   const now = new Date();
   lastUpdateTime.value = now.toLocaleTimeString("en-US", {
@@ -287,6 +318,7 @@ const loadAllCryptos = async () => {
   isLoadingCryptos.value = true;
   try {
     allCryptos.value = await fetchAllCryptos(apiKey);
+    buildMarketChangeList();
   } catch (err) {
     throw new Error(`Failed to load cryptocurrencies: ${err.message}`);
   } finally {
