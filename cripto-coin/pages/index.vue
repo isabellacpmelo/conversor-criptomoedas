@@ -1,29 +1,52 @@
 <template>
-  <div class="bg-gradient-to-r from-[#2B5876] to-[#4E4376] w-full min-h-screen py-16 px-6">
-    <div class="mx-auto max-w-4xl rounded-lg py-14 px-6 md:px-20 bg-[#9ceaef] bg-opacity-30">
+  <div class="relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
+    <div class="pointer-events-none absolute inset-0">
+      <div class="absolute left-[-8rem] top-10 h-72 w-72 rounded-full bg-sky-500/15 blur-3xl"></div>
+      <div class="absolute bottom-0 right-[-6rem] h-80 w-80 rounded-full bg-cyan-300/10 blur-3xl"></div>
+    </div>
+
+    <div class="relative mx-auto max-w-5xl rounded-[32px] border border-white/10 bg-slate-950/70 p-6 shadow-[0_24px_80px_rgba(2,6,23,0.55)] backdrop-blur-xl md:p-10">
       <div class="flex flex-col items-center">
         <!-- Header -->
-        <img class="w-20 mb-6" src="@/assets/img/criptomoedas.png" alt="Cryptocurrency" />
-        <h1 class="text-4xl md:text-5xl font-bold text-white mb-8 text-center">
+        <div class="mb-5 rounded-full border border-sky-300/20 bg-slate-900/80 px-4 py-2 text-xs font-medium uppercase tracking-[0.3em] text-sky-200">
+          Live crypto watchlist
+        </div>
+        <img class="mb-6 w-20 drop-shadow-[0_0_30px_rgba(56,189,248,0.35)]" src="@/assets/img/criptomoedas.png" alt="Cryptocurrency" />
+        <h1 class="mb-6 max-w-3xl text-center text-4xl font-bold tracking-tight text-slate-50 md:text-6xl">
           Cryptocurrency Converter
         </h1>
 
         <!-- Description -->
-        <article class="text-white text-center mb-8 max-w-2xl">
-          <h2 class="text-2xl md:text-3xl font-semibold mb-4">
+        <article class="mb-10 max-w-2xl text-center text-slate-200">
+          <h2 class="mb-4 text-2xl font-semibold text-slate-100 md:text-3xl">
             Welcome to the cryptocurrency price converter!
           </h2>
-          <p class="text-base md:text-lg">
-            Use to find out the current price of your favorite cryptocurrency in dollars (USD).
+          <p class="text-base leading-7 text-slate-300 md:text-lg">
+            Search by name or symbol, build a focused watchlist, and refresh prices on demand without burning API quota.
           </p>
         </article>
+
+        <div class="mb-8 grid w-full max-w-3xl gap-4 md:grid-cols-3">
+          <div class="rounded-2xl border border-white/10 bg-slate-900/70 p-4 text-left">
+            <p class="text-xs uppercase tracking-[0.24em] text-slate-400">Autocomplete</p>
+            <p class="mt-2 text-sm text-slate-200">Local suggestions with keyboard navigation and exact-match validation.</p>
+          </div>
+          <div class="rounded-2xl border border-white/10 bg-slate-900/70 p-4 text-left">
+            <p class="text-xs uppercase tracking-[0.24em] text-slate-400">Refresh policy</p>
+            <p class="mt-2 text-sm text-slate-200">Automatic sync every hour plus manual refresh whenever needed.</p>
+          </div>
+          <div class="rounded-2xl border border-white/10 bg-slate-900/70 p-4 text-left">
+            <p class="text-xs uppercase tracking-[0.24em] text-slate-400">Accessibility</p>
+            <p class="mt-2 text-sm text-slate-200">High contrast surfaces, visible focus rings, and calmer visual hierarchy.</p>
+          </div>
+        </div>
 
         <!-- Error Alert -->
         <div
           v-if="error"
-          class="w-full max-w-md mb-6 p-4 bg-red-600 text-white rounded-lg flex items-start gap-3"
+          class="mb-6 flex w-full max-w-2xl items-start gap-3 rounded-2xl border border-rose-400/25 bg-rose-500/12 p-4 text-rose-50 shadow-[0_12px_30px_rgba(244,63,94,0.12)]"
         >
-          <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+          <svg class="mt-0.5 h-5 w-5 flex-shrink-0 text-rose-300" fill="currentColor" viewBox="0 0 20 20">
             <path
               fill-rule="evenodd"
               d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
@@ -31,10 +54,10 @@
             ></path>
           </svg>
           <div class="flex-1">
-            <p class="font-semibold">Error</p>
-            <p class="text-sm">{{ error }}</p>
+            <p class="font-semibold text-rose-100">Error</p>
+            <p class="text-sm text-rose-50/90">{{ error }}</p>
             <button
-              class="mt-2 text-sm underline hover:text-gray-200 transition"
+              class="mt-2 text-sm font-medium text-rose-200 underline underline-offset-4 transition hover:text-white"
               @click="dismissError"
             >
               Dismiss
@@ -51,18 +74,18 @@
         />
 
         <!-- Initial Loading State -->
-        <div v-if="isInitializing" class="text-center py-8">
+        <div v-if="isInitializing" class="py-10 text-center">
           <div class="flex flex-col items-center gap-4">
-            <svg class="animate-spin h-12 w-12 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg class="h-12 w-12 animate-spin text-sky-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <p class="text-white text-lg">Initializing application...</p>
+            <p class="text-lg text-slate-200">Initializing application...</p>
           </div>
         </div>
 
         <!-- Crypto List -->
-        <div v-else class="w-full max-w-md">
+        <div v-else class="w-full max-w-3xl">
           <CryptoList
             :crypto-list="cryptoList"
             :is-loading="isLoadingCryptos"
@@ -71,17 +94,22 @@
         </div>
 
         <!-- Last Update -->
-        <div v-if="cryptoList.length > 0 && !isInitializing" class="mt-8 text-center text-sm text-gray-300">
-          <p>Last updated: {{ lastUpdateTime }}</p>
-          <p class="text-xs mt-1">Updates every 1 hour</p>
+        <div v-if="cryptoList.length > 0 && !isInitializing" class="mt-8 flex w-full max-w-3xl flex-col items-center justify-between gap-4 rounded-2xl border border-white/10 bg-slate-900/60 px-5 py-4 text-sm text-slate-300 md:flex-row">
+          <div class="text-center md:text-left">
+            <p class="font-medium text-slate-100">Last updated: {{ lastUpdateTime }}</p>
+            <p class="mt-1 text-xs uppercase tracking-[0.22em] text-slate-400">Automatic sync every 1 hour</p>
+          </div>
           <button
             type="button"
-            class="mt-3 rounded-lg bg-white/20 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/30 disabled:cursor-not-allowed disabled:opacity-60"
+            class="inline-flex items-center gap-2 rounded-xl border border-sky-300/20 bg-sky-400/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-sky-100 transition hover:border-sky-300/35 hover:bg-sky-400/20 disabled:cursor-not-allowed disabled:opacity-60"
             :disabled="isRefreshingPrices"
             @click="refreshCryptoPrices"
           >
-            <span v-if="isRefreshingPrices">Refreshing...</span>
-            <span v-else>Refresh now</span>
+            <svg v-if="isRefreshingPrices" class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>{{ isRefreshingPrices ? "Refreshing..." : "Refresh now" }}</span>
           </button>
         </div>
       </div>

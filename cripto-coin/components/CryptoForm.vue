@@ -1,10 +1,15 @@
 <template>
   <div>
-    <form class="my-8 flex flex-col items-center gap-4" @submit.prevent="handleSubmit">
-      <div class="relative w-full sm:w-72">
+    <form class="mb-10 w-full max-w-3xl rounded-[28px] border border-white/10 bg-slate-900/70 p-4 shadow-[0_20px_50px_rgba(2,6,23,0.35)] backdrop-blur md:p-6" @submit.prevent="handleSubmit">
+      <div class="flex flex-col gap-4 md:flex-row md:items-end">
+        <div class="relative flex-1">
+          <label for="crypto-search" class="mb-2 block text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
+            Search cryptocurrency
+          </label>
         <input
+          id="crypto-search"
           v-model="cryptoInput"
-          class="p-3 rounded placeholder-[#6096ba] text-center font-semibold border-2 border-gray-300 shadow-sm transition duration-100 ease-in-out focus:border-blue-500 focus:ring-2 focus:ring-gray-700 focus:ring-opacity-50 focus:outline-none disabled:opacity-50 w-full"
+          class="w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-4 text-left text-base font-medium text-slate-100 shadow-inner shadow-slate-950/40 transition duration-150 ease-in-out placeholder:text-slate-500 focus:border-sky-300/50 focus:ring-4 focus:ring-sky-300/15 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
           type="text"
           placeholder="Enter crypto name or symbol"
           autocomplete="off"
@@ -22,14 +27,14 @@
         <ul
           v-if="showSuggestions"
           id="crypto-suggestions"
-          class="absolute z-20 mt-2 w-full overflow-hidden rounded-xl border border-white/20 bg-white text-left shadow-xl"
+          class="absolute z-20 mt-3 w-full overflow-hidden rounded-2xl border border-white/10 bg-slate-950/95 text-left shadow-[0_20px_45px_rgba(2,6,23,0.65)] backdrop-blur"
           role="listbox"
         >
           <li
             v-for="(suggestion, index) in suggestions"
             :key="`${suggestion.asset_id || 'asset'}-${suggestion.name || 'name'}-${index}`"
             class="cursor-pointer px-4 py-3 transition"
-            :class="index === activeSuggestionIndex ? 'bg-[#2B5876] text-white' : 'text-slate-800 hover:bg-slate-100'"
+            :class="index === activeSuggestionIndex ? 'bg-sky-400/15 text-slate-50' : 'text-slate-200 hover:bg-white/5'"
             role="option"
             :aria-selected="index === activeSuggestionIndex"
             @mousedown.prevent="selectSuggestion(suggestion)"
@@ -38,11 +43,11 @@
             <div class="flex items-center justify-between gap-4">
               <div class="min-w-0">
                 <p class="truncate font-semibold">{{ suggestion.name || suggestion.asset_id }}</p>
-                <p class="truncate text-xs" :class="index === activeSuggestionIndex ? 'text-blue-100' : 'text-slate-500'">
+                <p class="truncate text-xs" :class="index === activeSuggestionIndex ? 'text-sky-100' : 'text-slate-500'">
                   {{ suggestion.asset_id }}
                 </p>
               </div>
-              <span class="shrink-0 text-xs font-medium" :class="index === activeSuggestionIndex ? 'text-blue-100' : 'text-slate-500'">
+              <span class="shrink-0 rounded-full border border-white/10 px-2 py-1 text-[10px] font-medium uppercase tracking-[0.18em]" :class="index === activeSuggestionIndex ? 'border-sky-300/20 text-sky-100' : 'text-slate-500'">
                 symbol
               </span>
             </div>
@@ -51,7 +56,7 @@
       </div>
 
       <button
-        class="font-bold bg-[#2B5876] hover:bg-[#1a3f54] disabled:bg-gray-500 text-white ring-1 ring-gray-700 px-8 py-2 rounded-full transition duration-200 ease-in-out transform hover:scale-105"
+        class="inline-flex min-h-[56px] items-center justify-center rounded-2xl bg-sky-400 px-8 py-3 text-sm font-bold uppercase tracking-[0.18em] text-slate-950 shadow-[0_14px_30px_rgba(56,189,248,0.25)] transition duration-200 ease-in-out hover:bg-sky-300 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400 md:min-w-[190px]"
         type="submit"
         :disabled="isLoading || !cryptoInput.trim()"
       >
@@ -64,12 +69,19 @@
         </span>
         <span v-else>Add Crypto</span>
       </button>
+      </div>
 
-      <p class="-mt-1 text-center text-xs text-blue-100/90">
-        Type a name like Bitcoin or a symbol like BTC.
-      </p>
+      <div class="mt-4 flex flex-col gap-2 text-center md:flex-row md:items-center md:justify-between md:text-left">
+        <p class="text-xs uppercase tracking-[0.2em] text-slate-400">
+          Type a name like Bitcoin or a symbol like BTC.
+        </p>
 
-      <p v-if="errorMessage" class="text-red-400 text-sm text-center">
+        <p class="text-xs text-slate-500">
+          Only assets from the suggestion list can be added.
+        </p>
+      </div>
+
+      <p v-if="errorMessage" class="mt-3 text-sm text-rose-300">
         {{ errorMessage }}
       </p>
     </form>

@@ -1,19 +1,22 @@
 <template>
   <div
     v-if="isOpen"
-    class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 px-4"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 px-4 backdrop-blur-sm"
     role="dialog"
     aria-modal="true"
     :aria-labelledby="titleId"
     @click.self="$emit('close')"
   >
-    <div class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-slate-200">
-      <h3 :id="titleId" class="text-lg font-bold text-slate-900">{{ title }}</h3>
-      <p class="mt-3 text-sm text-slate-700">{{ message }}</p>
+    <div class="w-full max-w-sm rounded-[28px] border border-white/10 bg-slate-900/95 p-6 shadow-[0_24px_70px_rgba(2,6,23,0.65)] ring-1 ring-sky-300/10">
+      <div class="mb-4 inline-flex rounded-full border border-rose-400/20 bg-rose-500/12 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-rose-200">
+        Validation
+      </div>
+      <h3 :id="titleId" class="text-lg font-bold text-slate-50">{{ title }}</h3>
+      <p class="mt-3 text-sm leading-6 text-slate-300">{{ message }}</p>
       <div class="mt-5 flex justify-end">
         <button
           type="button"
-          class="rounded-lg bg-[#2B5876] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#1a3f54]"
+          class="rounded-xl bg-sky-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-sky-300"
           @click="$emit('close')"
         >
           {{ confirmText }}

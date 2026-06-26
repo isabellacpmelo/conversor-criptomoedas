@@ -1,3 +1,65 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+	color-scheme: dark;
+	--app-bg: #07111f;
+	--surface-1: rgba(11, 23, 41, 0.86);
+	--surface-2: rgba(16, 31, 54, 0.95);
+	--surface-3: rgba(25, 43, 72, 0.98);
+	--border-soft: rgba(148, 163, 184, 0.16);
+	--border-strong: rgba(125, 211, 252, 0.28);
+	--text-main: #e5eefb;
+	--text-muted: #99a9c2;
+	--accent: #7dd3fc;
+	--accent-strong: #38bdf8;
+	--danger: #fb7185;
+}
+
+html,
+body,
+#__nuxt {
+	min-height: 100%;
+}
+
+body {
+	margin: 0;
+	font-family: "Space Grotesk", sans-serif;
+	background:
+		radial-gradient(circle at top, rgba(56, 189, 248, 0.15), transparent 32%),
+		radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.14), transparent 24%),
+		linear-gradient(180deg, #08111f 0%, #030712 100%);
+	color: var(--text-main);
+}
+
+* {
+	scrollbar-width: thin;
+	scrollbar-color: rgba(125, 211, 252, 0.35) rgba(15, 23, 42, 0.4);
+}
+
+*::-webkit-scrollbar {
+	width: 10px;
+}
+
+*::-webkit-scrollbar-track {
+	background: rgba(15, 23, 42, 0.4);
+}
+
+*::-webkit-scrollbar-thumb {
+	background: rgba(125, 211, 252, 0.35);
+	border-radius: 9999px;
+}
+
+::selection {
+	background: rgba(56, 189, 248, 0.35);
+	color: #f8fafc;
+}
+
+button:focus-visible,
+input:focus-visible {
+	outline: 3px solid rgba(125, 211, 252, 0.34);
+	outline-offset: 2px;
+}
