@@ -1,6 +1,6 @@
 <template>
   <div>
-    <form class="theme-surface mb-10 w-full max-w-3xl rounded-[28px] border p-4 shadow-[0_20px_50px_rgba(2,6,23,0.35)] backdrop-blur md:p-6" @submit.prevent="handleSubmit">
+    <form class="mb-8 w-full max-w-3xl rounded-2xl p-1 md:p-2" @submit.prevent="handleSubmit">
       <div class="flex flex-col gap-4 md:flex-row md:items-end">
         <div class="relative flex-1">
           <label for="crypto-search" class="theme-text-subtle mb-2 block text-xs font-semibold uppercase tracking-[0.24em]">
@@ -72,7 +72,7 @@
       </button>
       </div>
 
-      <div class="mt-4 flex flex-col gap-2 text-center md:flex-row md:items-center md:justify-between md:text-left">
+      <div class="mt-3 flex flex-col gap-2 text-center md:flex-row md:items-center md:justify-between md:text-left">
         <p class="theme-text-subtle text-xs uppercase tracking-[0.2em]">
           Type a name like Bitcoin or a symbol like BTC.
         </p>

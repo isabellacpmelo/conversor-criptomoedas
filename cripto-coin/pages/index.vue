@@ -104,7 +104,7 @@
         </div>
 
         <!-- Last Update -->
-        <div v-if="cryptoList.length > 0 && !isInitializing" class="theme-surface theme-text-muted mt-8 flex w-full max-w-3xl flex-col items-center justify-between gap-4 rounded-2xl border px-5 py-4 text-sm md:flex-row">
+        <div v-if="cryptoList.length > 0 && !isInitializing" class="theme-text-muted mt-8 flex w-full max-w-3xl flex-col items-center justify-between gap-4 px-1 py-1 text-sm md:flex-row">
           <div class="text-center md:text-left">
             <p class="theme-text-main font-medium">Last updated: {{ lastUpdateTime }}</p>
             <p class="theme-text-subtle mt-1 text-xs uppercase tracking-[0.22em]">Automatic sync every 1 hour</p>
