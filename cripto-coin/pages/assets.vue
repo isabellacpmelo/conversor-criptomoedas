@@ -214,13 +214,11 @@
 <script setup>
 import { computed, ref, watch, onMounted, nextTick } from "vue";
 import { fetchAllCryptos, normalizeText } from "@/utils/cryptoApi.js";
+import { buildMarketChangeList, hasValidPrice } from "@/utils/cryptoMarket.js";
 import { useThemePreference } from "@/composables/useThemePreference";
 import { useMarketSnapshotStorage } from "@/composables/useMarketSnapshotStorage";
 
 useHead({ title: "All Assets | Cryptocurrency Converter" });
-
-const config = useRuntimeConfig();
-const apiKey = config.public.cryptoApiKey;
 
 const isLoadingPage = ref(true);
 const error = ref("");
@@ -237,40 +235,10 @@ const tableScrollTop = ref(0);
 const { isDarkTheme, initializeTheme, toggleTheme } = useThemePreference();
 const { marketSnapshotStorage } = useMarketSnapshotStorage();
 
-const hasValidPrice = (value) => Number.isFinite(Number(value)) && Number(value) > 0;
-
-const buildMarketChangeList = (loadedAssets) => {
-  const previousSnapshot = marketSnapshotStorage.read();
-  const previousPriceMap = new Map(
-    previousSnapshot.map((asset) => [String(asset.asset_id || "").toUpperCase(), Number(asset.price_usd)])
-  );
-
-  const mappedAssets = loadedAssets.map((asset) => {
-    const currentPrice = Number(asset?.price_usd);
-    const previousPrice = previousPriceMap.get(String(asset?.asset_id || "").toUpperCase());
-
-    let marketChangePercentage = null;
-    if (hasValidPrice(currentPrice) && hasValidPrice(previousPrice) && previousPrice > 0) {
-      marketChangePercentage = ((currentPrice - previousPrice) / previousPrice) * 100;
-    }
-
-    return {
-      ...asset,
-      market_change_percentage: marketChangePercentage,
-    };
-  });
-
-  marketSnapshotStorage.write(loadedAssets);
-  return mappedAssets;
-};
-
 const loadAssets = async () => {
-  if (!apiKey) {
-    throw new Error("API key not configured. Please check your .env file.");
-  }
-
-  const loadedAssets = await fetchAllCryptos(apiKey);
-  assets.value = buildMarketChangeList(loadedAssets);
+  const loadedAssets = await fetchAllCryptos();
+  assets.value = buildMarketChangeList(loadedAssets, marketSnapshotStorage.read());
+  marketSnapshotStorage.write(loadedAssets);
 };
 
 const filteredAssets = computed(() => {

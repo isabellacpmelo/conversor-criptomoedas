@@ -133,14 +133,12 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from "vue";
 import { fetchAllCryptos, searchCrypto, isDuplicateCrypto, fetchCryptoPrice } from "@/utils/cryptoApi.js";
+import { addTrendMetadata, buildMarketChangeList, hasValidPrice, hydrateSavedCryptos, normalizeAssetId } from "@/utils/cryptoMarket.js";
 import { useThemePreference } from "@/composables/useThemePreference";
 import { useCryptoHistoryStorage } from "@/composables/useCryptoHistoryStorage";
 import { useMarketSnapshotStorage } from "@/composables/useMarketSnapshotStorage";
 
 useHead({ title: "Cryptocurrency Converter" });
-
-const config = useRuntimeConfig();
-const apiKey = config.public.cryptoApiKey;
 
 const allCryptos = ref([]);
 const allCryptosWithMarketChange = ref([]);
@@ -156,104 +154,12 @@ const { isDarkTheme, initializeTheme, toggleTheme } = useThemePreference();
 const { historyStorage } = useCryptoHistoryStorage();
 const { marketSnapshotStorage } = useMarketSnapshotStorage();
 
-const hasValidPrice = (value) => Number.isFinite(Number(value)) && Number(value) > 0;
-
-const addTrendMetadata = (crypto, nextPrice, previousPriceFallback = null) => {
-  const previousPrice = hasValidPrice(previousPriceFallback)
-    ? Number(previousPriceFallback)
-    : hasValidPrice(crypto?.price_usd)
-      ? Number(crypto.price_usd)
-      : null;
-
-  const normalizedNextPrice = hasValidPrice(nextPrice) ? Number(nextPrice) : null;
-
-  let trend = "neutral";
-  let changePercentage = null;
-
-  if (hasValidPrice(normalizedNextPrice) && hasValidPrice(previousPrice) && previousPrice > 0) {
-    const delta = normalizedNextPrice - previousPrice;
-    const computedChange = (delta / previousPrice) * 100;
-    if (delta !== 0) {
-      trend = computedChange > 0 ? "up" : "down";
-      changePercentage = computedChange;
-    }
-  }
-
-  return {
-    ...crypto,
-    price_usd: normalizedNextPrice ?? crypto?.price_usd ?? null,
-    previous_price_usd: previousPrice,
-    price_change_percentage_24h: changePercentage,
-    price_trend: trend,
-  };
-};
-
 const syncCryptoHistory = () => {
   historyStorage.write(cryptoList.value);
 };
 
-const hydrateSavedCryptos = (savedCryptos = []) => {
-  if (!Array.isArray(savedCryptos) || !savedCryptos.length) {
-    return [];
-  }
-
-  return savedCryptos
-    .map((savedCrypto) => {
-      if (!savedCrypto || !savedCrypto.asset_id) {
-        return null;
-      }
-
-      const apiCrypto = allCryptos.value.find(
-        (crypto) => String(crypto?.asset_id || "").toUpperCase() === String(savedCrypto.asset_id).toUpperCase()
-      );
-
-      const hydratedCrypto = apiCrypto ? { ...apiCrypto } : { ...savedCrypto };
-      if (!hydratedCrypto.name) {
-        hydratedCrypto.name = savedCrypto.name || savedCrypto.asset_id;
-      }
-
-      if (!hasValidPrice(hydratedCrypto.price_usd) && hasValidPrice(savedCrypto.price_usd)) {
-        hydratedCrypto.price_usd = Number(savedCrypto.price_usd);
-      }
-
-      hydratedCrypto.previous_price_usd = hasValidPrice(savedCrypto.previous_price_usd)
-        ? Number(savedCrypto.previous_price_usd)
-        : null;
-
-      hydratedCrypto.price_change_percentage_24h = Number.isFinite(Number(savedCrypto.price_change_percentage_24h))
-        ? Number(savedCrypto.price_change_percentage_24h)
-        : null;
-
-      hydratedCrypto.price_trend = ["up", "down", "neutral"].includes(savedCrypto.price_trend)
-        ? savedCrypto.price_trend
-        : "neutral";
-
-      return hydratedCrypto;
-    })
-    .filter(Boolean);
-};
-
-const buildMarketChangeList = () => {
-  const previousSnapshot = marketSnapshotStorage.read();
-  const previousPriceMap = new Map(
-    previousSnapshot.map((asset) => [String(asset.asset_id || "").toUpperCase(), Number(asset.price_usd)])
-  );
-
-  allCryptosWithMarketChange.value = allCryptos.value.map((asset) => {
-    const currentPrice = Number(asset?.price_usd);
-    const previousPrice = previousPriceMap.get(String(asset?.asset_id || "").toUpperCase());
-
-    let marketChangePercentage = null;
-    if (hasValidPrice(currentPrice) && hasValidPrice(previousPrice) && previousPrice > 0) {
-      marketChangePercentage = ((currentPrice - previousPrice) / previousPrice) * 100;
-    }
-
-    return {
-      ...asset,
-      market_change_percentage: marketChangePercentage,
-    };
-  });
-
+const updateMarketSnapshot = () => {
+  allCryptosWithMarketChange.value = buildMarketChangeList(allCryptos.value, marketSnapshotStorage.read());
   marketSnapshotStorage.write(allCryptos.value);
 };
 
@@ -296,7 +202,7 @@ const refreshCryptoPrices = async () => {
           return crypto;
         }
 
-        const latestPrice = await fetchCryptoPrice(crypto.asset_id, apiKey);
+        const latestPrice = await fetchCryptoPrice(crypto.asset_id);
         if (hasValidPrice(latestPrice)) {
           return addTrendMetadata(crypto, Number(latestPrice), crypto.price_usd);
         }
@@ -329,13 +235,13 @@ const loadAllCryptos = async ({ bootstrapMovers = false } = {}) => {
   try {
     const snapshotExistsBeforeLoad = hasMarketSnapshot();
 
-    allCryptos.value = await fetchAllCryptos(apiKey);
-    buildMarketChangeList();
+    allCryptos.value = await fetchAllCryptos();
+    updateMarketSnapshot();
 
     if (bootstrapMovers && !snapshotExistsBeforeLoad) {
       // First run: perform one additional load to compare against the first snapshot.
-      allCryptos.value = await fetchAllCryptos(apiKey);
-      buildMarketChangeList();
+      allCryptos.value = await fetchAllCryptos();
+      updateMarketSnapshot();
     }
   } catch (err) {
     throw new Error(`Failed to load cryptocurrencies: ${err.message}`);
@@ -344,8 +250,9 @@ const loadAllCryptos = async ({ bootstrapMovers = false } = {}) => {
   }
 };
 
-const removeCrypto = (cryptoName) => {
-  cryptoList.value = cryptoList.value.filter((crypto) => crypto.name !== cryptoName);
+const removeCrypto = (assetId) => {
+  const normalizedAssetKey = normalizeAssetId(assetId);
+  cryptoList.value = cryptoList.value.filter((crypto) => normalizeAssetId(crypto?.asset_id) !== normalizedAssetKey);
   updateLastUpdateTime();
   syncCryptoHistory();
 };
@@ -356,16 +263,17 @@ const handleAddCrypto = async (cryptoName) => {
     isLoadingCryptos.value = true;
 
     if (!cryptoName.trim()) throw new Error("Please enter a cryptocurrency name");
-    if (isDuplicateCrypto(cryptoList.value, cryptoName)) throw new Error(`${cryptoName} is already in your list`);
 
     const foundCrypto = searchCrypto(cryptoName, allCryptos.value);
     if (!foundCrypto) throw new Error(`Cryptocurrency "${cryptoName}" not found. Please check the name and try again.`);
+    if (isDuplicateCrypto(cryptoList.value, foundCrypto.asset_id)) {
+      throw new Error(`${foundCrypto.name || foundCrypto.asset_id} is already in your list`);
+    }
 
     const cryptoToAdd = { ...foundCrypto };
 
-    // Keep API list price when available; otherwise try asset-specific lookup.
     if (!hasValidPrice(cryptoToAdd.price_usd)) {
-      const price = await fetchCryptoPrice(cryptoToAdd.asset_id, apiKey);
+      const price = await fetchCryptoPrice(cryptoToAdd.asset_id);
       if (hasValidPrice(price)) {
         cryptoToAdd.price_usd = Number(price);
       }
@@ -393,12 +301,10 @@ const initializeApp = async () => {
     isInitializing.value = true;
     error.value = "";
 
-    if (!apiKey) throw new Error("API key not configured. Please check your .env file.");
-
     await loadAllCryptos({ bootstrapMovers: true });
 
     const savedCryptos = historyStorage.read();
-    const restoredCryptos = hydrateSavedCryptos(savedCryptos);
+    const restoredCryptos = hydrateSavedCryptos(savedCryptos, allCryptos.value);
 
     if (restoredCryptos.length) {
       cryptoList.value = restoredCryptos;
@@ -408,9 +314,8 @@ const initializeApp = async () => {
       if (bitcoin) {
         const initialBitcoin = { ...bitcoin };
 
-        // Ensure initial card starts with a valid price.
         if (!hasValidPrice(initialBitcoin.price_usd)) {
-          const price = await fetchCryptoPrice(initialBitcoin.asset_id, apiKey);
+          const price = await fetchCryptoPrice(initialBitcoin.asset_id);
           if (hasValidPrice(price)) {
             initialBitcoin.price_usd = Number(price);
           }

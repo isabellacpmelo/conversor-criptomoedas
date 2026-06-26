@@ -11,9 +11,7 @@ export default defineNuxtConfig({
   css: ["@/assets/css/main.css"],
 
   runtimeConfig: {
-    public: {
-      cryptoApiKey: "", // Sobrescrito automaticamente por NUXT_PUBLIC_CRYPTO_API_KEY
-    },
+    cryptoApiKey: process.env.NUXT_CRYPTO_API_KEY || process.env.NUXT_PUBLIC_CRYPTO_API_KEY || "",
   },
 
   app: {

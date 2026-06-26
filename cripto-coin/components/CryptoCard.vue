@@ -22,7 +22,7 @@
     </div>
     <button
       class="rounded-xl border border-rose-400/20 bg-rose-500/12 px-4 py-2 font-semibold text-rose-100 transition duration-200 ease-in-out hover:bg-rose-500/20"
-      @click="$emit('remove', crypto.name)"
+      @click="$emit('remove', crypto.asset_id)"
     >
       Remove
     </button>

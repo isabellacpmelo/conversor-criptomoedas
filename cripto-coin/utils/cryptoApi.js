@@ -2,52 +2,47 @@
  * Crypto API utility functions
  */
 
-const API_BASE_URL = "https://rest.coinapi.io/v1";
-const API_TIMEOUT = 10000; // 10 seconds
+import { normalizeAssetId } from "@/utils/cryptoMarket.js";
+
+const APP_API_BASE_URL = "/api/crypto";
+
+async function fetchAppApiJson(path) {
+  const response = await fetch(`${APP_API_BASE_URL}${path}`);
+
+  if (!response.ok) {
+    let statusMessage = `API error: ${response.status} ${response.statusText}`;
+
+    try {
+      const errorPayload = await response.json();
+      if (errorPayload?.statusMessage) {
+        statusMessage = errorPayload.statusMessage;
+      }
+    } catch {
+      // Ignore invalid JSON responses.
+    }
+
+    if (response.status === 429) {
+      throw new Error("API rate limit exceeded. Please try again later.");
+    }
+
+    throw new Error(statusMessage);
+  }
+
+  return response.json();
+}
 
 /**
  * Fetch all available cryptocurrencies
- * @param {string} apiKey - CoinAPI API key
  * @returns {Promise<Array>} Array of cryptocurrency assets
  */
-export async function fetchAllCryptos(apiKey) {
-  if (!apiKey) {
-    throw new Error("API key is required");
+export async function fetchAllCryptos() {
+  const data = await fetchAppApiJson("/assets");
+
+  if (!Array.isArray(data)) {
+    throw new Error("Invalid API response format");
   }
 
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
-
-    const response = await fetch(`${API_BASE_URL}/assets`, {
-      headers: {
-        "X-CoinAPI-Key": apiKey,
-      },
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      if (response.status === 429) {
-        throw new Error("API rate limit exceeded. Please try again later.");
-      }
-      throw new Error(`API error: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-
-    if (!Array.isArray(data)) {
-      throw new Error("Invalid API response format");
-    }
-
-    return data;
-  } catch (error) {
-    if (error.name === "AbortError") {
-      throw new Error("Request timeout. Please check your connection and try again.");
-    }
-    throw error;
-  }
+  return data;
 }
 
 /**
@@ -144,10 +139,10 @@ export function getCryptoSuggestions(query, allCryptos, selectedCryptos = [], li
     return [];
   }
 
-  const selectedNames = new Set(
+  const selectedAssetIds = new Set(
     selectedCryptos
       .filter((crypto) => crypto && typeof crypto === "object")
-      .map((crypto) => normalizeText(crypto.name))
+      .map((crypto) => normalizeAssetId(crypto.asset_id))
       .filter(Boolean)
   );
 
@@ -168,7 +163,7 @@ export function getCryptoSuggestions(query, allCryptos, selectedCryptos = [], li
         return false;
       }
 
-      if (selectedNames.has(normalizedName)) {
+      if (selectedAssetIds.has(normalizedSymbol)) {
         return false;
       }
 
@@ -225,34 +220,18 @@ export function getCryptoSuggestions(query, allCryptos, selectedCryptos = [], li
 /**
  * Fetch the latest price for a cryptocurrency
  * @param {string} assetId - Asset ID (e.g., 'BTC')
- * @param {string} apiKey - CoinAPI API key
  * @returns {Promise<number|null>} Price in USD or null if fetch fails
  */
-export async function fetchCryptoPrice(assetId, apiKey) {
-  if (!assetId || !apiKey) {
+export async function fetchCryptoPrice(assetId) {
+  if (!assetId) {
     return null;
   }
 
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
-
-    const response = await fetch(`${API_BASE_URL}/assets/${assetId}`, {
-      headers: {
-        "X-CoinAPI-Key": apiKey,
-      },
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const data = await response.json();
+    const data = await fetchAppApiJson(`/asset?assetId=${encodeURIComponent(assetId)}`);
     if (Array.isArray(data)) {
-      const asset = data.find((item) => normalizeText(item?.asset_id) === normalizeText(assetId)) || data[0];
+      const normalizedAssetKey = normalizeAssetId(assetId);
+      const asset = data.find((item) => normalizeAssetId(item?.asset_id) === normalizedAssetKey) || data[0];
       return hasValidPrice(asset?.price_usd) ? Number(asset.price_usd) : null;
     }
 
@@ -275,9 +254,10 @@ export function formatPrice(price) {
 /**
  * Check if crypto is already in the list
  * @param {Array} cryptoList - Current crypto list
- * @param {string} cryptoName - Name to check
+ * @param {string} cryptoName - Asset id to check
  * @returns {boolean} True if already exists
  */
 export function isDuplicateCrypto(cryptoList, cryptoName) {
-  return cryptoList.some((crypto) => crypto.name.toLowerCase() === cryptoName.toLowerCase());
+  const normalizedAssetKey = normalizeAssetId(cryptoName);
+  return cryptoList.some((crypto) => normalizeAssetId(crypto?.asset_id) === normalizedAssetKey);
 }

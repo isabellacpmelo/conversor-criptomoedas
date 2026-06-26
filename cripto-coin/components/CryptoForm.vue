@@ -161,7 +161,7 @@ const handleBlur = () => {
 };
 
 const selectSuggestion = (suggestion) => {
-  emit("submit", suggestion.name || suggestion.asset_id || "");
+  emit("submit", suggestion.asset_id || suggestion.name || "");
   cryptoInput.value = "";
   errorMessage.value = "";
   closeSuggestions();
