@@ -5,46 +5,56 @@
       <div class="absolute bottom-0 right-[-6rem] h-80 w-80 rounded-full bg-cyan-300/10 blur-3xl"></div>
     </div>
 
-    <div class="relative mx-auto max-w-5xl rounded-[32px] border border-white/10 bg-slate-950/70 p-6 shadow-[0_24px_80px_rgba(2,6,23,0.55)] backdrop-blur-xl md:p-10">
+    <div class="theme-shell relative mx-auto max-w-5xl rounded-[32px] border p-6 shadow-[0_24px_80px_rgba(2,6,23,0.55)] backdrop-blur-xl md:p-10">
       <div class="flex flex-col items-center">
+        <div class="mb-6 flex w-full justify-end">
+          <button
+            type="button"
+            class="theme-secondary-btn rounded-xl border px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] transition"
+            @click="toggleTheme"
+          >
+            {{ isDarkTheme ? "Switch to light mode" : "Switch to dark mode" }}
+          </button>
+        </div>
+
         <!-- Header -->
-        <div class="mb-5 rounded-full border border-sky-300/20 bg-slate-900/80 px-4 py-2 text-xs font-medium uppercase tracking-[0.3em] text-sky-200">
+        <div class="theme-surface theme-text-muted mb-5 rounded-full border px-4 py-2 text-xs font-medium uppercase tracking-[0.3em]">
           Live crypto watchlist
         </div>
         <img class="mb-6 w-20 drop-shadow-[0_0_30px_rgba(56,189,248,0.35)]" src="@/assets/img/criptomoedas.png" alt="Cryptocurrency" />
-        <h1 class="mb-6 max-w-3xl text-center text-4xl font-bold tracking-tight text-slate-50 md:text-6xl">
+        <h1 class="theme-text-main mb-6 max-w-3xl text-center text-4xl font-bold tracking-tight md:text-6xl">
           Cryptocurrency Converter
         </h1>
 
         <!-- Description -->
-        <article class="mb-10 max-w-2xl text-center text-slate-200">
-          <h2 class="mb-4 text-2xl font-semibold text-slate-100 md:text-3xl">
+        <article class="mb-10 max-w-2xl text-center">
+          <h2 class="theme-text-main mb-4 text-2xl font-semibold md:text-3xl">
             Welcome to the cryptocurrency price converter!
           </h2>
-          <p class="text-base leading-7 text-slate-300 md:text-lg">
+          <p class="theme-text-muted text-base leading-7 md:text-lg">
             Search by name or symbol, build a focused watchlist, and refresh prices on demand without burning API quota.
           </p>
         </article>
 
         <div class="mb-8 grid w-full max-w-3xl gap-4 md:grid-cols-3">
-          <div class="rounded-2xl border border-white/10 bg-slate-900/70 p-4 text-left">
-            <p class="text-xs uppercase tracking-[0.24em] text-slate-400">Autocomplete</p>
-            <p class="mt-2 text-sm text-slate-200">Local suggestions with keyboard navigation and exact-match validation.</p>
+          <div class="theme-surface rounded-2xl border p-4 text-left">
+            <p class="theme-text-subtle text-xs uppercase tracking-[0.24em]">Autocomplete</p>
+            <p class="theme-text-muted mt-2 text-sm">Local suggestions with keyboard navigation and exact-match validation.</p>
           </div>
-          <div class="rounded-2xl border border-white/10 bg-slate-900/70 p-4 text-left">
-            <p class="text-xs uppercase tracking-[0.24em] text-slate-400">Refresh policy</p>
-            <p class="mt-2 text-sm text-slate-200">Automatic sync every hour plus manual refresh whenever needed.</p>
+          <div class="theme-surface rounded-2xl border p-4 text-left">
+            <p class="theme-text-subtle text-xs uppercase tracking-[0.24em]">Refresh policy</p>
+            <p class="theme-text-muted mt-2 text-sm">Automatic sync every hour plus manual refresh whenever needed.</p>
           </div>
-          <div class="rounded-2xl border border-white/10 bg-slate-900/70 p-4 text-left">
-            <p class="text-xs uppercase tracking-[0.24em] text-slate-400">Accessibility</p>
-            <p class="mt-2 text-sm text-slate-200">High contrast surfaces, visible focus rings, and calmer visual hierarchy.</p>
+          <div class="theme-surface rounded-2xl border p-4 text-left">
+            <p class="theme-text-subtle text-xs uppercase tracking-[0.24em]">Accessibility</p>
+            <p class="theme-text-muted mt-2 text-sm">High contrast surfaces, visible focus rings, and calmer visual hierarchy.</p>
           </div>
         </div>
 
         <!-- Error Alert -->
         <div
           v-if="error"
-          class="mb-6 flex w-full max-w-2xl items-start gap-3 rounded-2xl border border-rose-400/25 bg-rose-500/12 p-4 text-rose-50 shadow-[0_12px_30px_rgba(244,63,94,0.12)]"
+          class="theme-alert mb-6 flex w-full max-w-2xl items-start gap-3 rounded-2xl border p-4 shadow-[0_12px_30px_rgba(244,63,94,0.12)]"
         >
           <svg class="mt-0.5 h-5 w-5 flex-shrink-0 text-rose-300" fill="currentColor" viewBox="0 0 20 20">
             <path
@@ -54,10 +64,10 @@
             ></path>
           </svg>
           <div class="flex-1">
-            <p class="font-semibold text-rose-100">Error</p>
-            <p class="text-sm text-rose-50/90">{{ error }}</p>
+            <p class="font-semibold">Error</p>
+            <p class="text-sm">{{ error }}</p>
             <button
-              class="mt-2 text-sm font-medium text-rose-200 underline underline-offset-4 transition hover:text-white"
+              class="mt-2 text-sm font-medium underline underline-offset-4 transition hover:opacity-85"
               @click="dismissError"
             >
               Dismiss
@@ -80,7 +90,7 @@
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <p class="text-lg text-slate-200">Initializing application...</p>
+            <p class="theme-text-muted text-lg">Initializing application...</p>
           </div>
         </div>
 
@@ -94,14 +104,14 @@
         </div>
 
         <!-- Last Update -->
-        <div v-if="cryptoList.length > 0 && !isInitializing" class="mt-8 flex w-full max-w-3xl flex-col items-center justify-between gap-4 rounded-2xl border border-white/10 bg-slate-900/60 px-5 py-4 text-sm text-slate-300 md:flex-row">
+        <div v-if="cryptoList.length > 0 && !isInitializing" class="theme-surface theme-text-muted mt-8 flex w-full max-w-3xl flex-col items-center justify-between gap-4 rounded-2xl border px-5 py-4 text-sm md:flex-row">
           <div class="text-center md:text-left">
-            <p class="font-medium text-slate-100">Last updated: {{ lastUpdateTime }}</p>
-            <p class="mt-1 text-xs uppercase tracking-[0.22em] text-slate-400">Automatic sync every 1 hour</p>
+            <p class="theme-text-main font-medium">Last updated: {{ lastUpdateTime }}</p>
+            <p class="theme-text-subtle mt-1 text-xs uppercase tracking-[0.22em]">Automatic sync every 1 hour</p>
           </div>
           <button
             type="button"
-            class="inline-flex items-center gap-2 rounded-xl border border-sky-300/20 bg-sky-400/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-sky-100 transition hover:border-sky-300/35 hover:bg-sky-400/20 disabled:cursor-not-allowed disabled:opacity-60"
+            class="theme-secondary-btn inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] transition disabled:cursor-not-allowed disabled:opacity-60"
             :disabled="isRefreshingPrices"
             @click="refreshCryptoPrices"
           >
@@ -120,6 +130,7 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from "vue";
 import { fetchAllCryptos, searchCrypto, isDuplicateCrypto, fetchCryptoPrice } from "@/utils/cryptoApi.js";
+import { useThemePreference } from "@/composables/useThemePreference";
 
 useHead({ title: "Cryptocurrency Converter" });
 
@@ -134,6 +145,8 @@ const isRefreshingPrices = ref(false);
 const error = ref("");
 const lastUpdateTime = ref("");
 let refreshInterval = null;
+
+const { isDarkTheme, initializeTheme, toggleTheme } = useThemePreference();
 
 const hasValidPrice = (value) => Number.isFinite(Number(value)) && Number(value) > 0;
 
@@ -281,6 +294,7 @@ const initializeApp = async () => {
 };
 
 onMounted(() => {
+  initializeTheme();
   initializeApp();
 });
 
