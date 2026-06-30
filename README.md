@@ -1,108 +1,157 @@
-<!-- @format -->
-
 # Cripto Coin
 
-Projeto criado utilizando Vue.js, Nuxt.js e Tailwind CSS, com o objetivo de produzir um conversor de criptomoedas, permitindo que o usuário saiba a cotação do criptoativo desejado.
-
-Clique <a href="https://cryptor-converter.netlify.app/">aqui</a> para acessar o projeto.
-
-
-## Ferramentas utilizadas
-
-- <a href="https://code.visualstudio.com/">VS Code</a>
-- <a href="https://nodejs.org/en/">Node.js</a>
-- <a href="https://vuejs.org/">Vue.js</a>
-- <a href="https://nuxtjs.org/">Nuxt.js</a>
-- <a href="https://tailwindcss.com/">Tailwind CSS</a>
-- <a href="https://www.coinapi.io/">CoinAPI.io</a>
-
-## Desafios encontrados
-
-- Instalação do Nuxt e Tailwind CSS
-- API Key permite apenas 100 requições a cada 24H (ao exceder esse valor, gera o erro 429)
-- O carregamento da página atrapalha o funcionamento do conversor, provavelmente devido ao método assync
-
-## Como executar o projeto
-
-    $ cd $ cd cripto-coin
-    # install dependencies
-    $ npm install
-
-    # serve with hot reload at localhost:3000
-    $ npm run dev
-
-## Print do Projeto
-<a href="https://cryptor-converter.netlify.app/">
-    <img src="https://user-images.githubusercontent.com/42364778/212822345-1e628d9f-63a7-4464-bbe2-cb8454335909.png">
-</a>
-
+<div align="left">
+<a href="https://cryptor-converter.netlify.app/"><img height="355em" alt="Cripto Coin" src="https://user-images.githubusercontent.com/42364778/212822345-1e628d9f-63a7-4464-bbe2-cb8454335909.png" /></a>
+</div>
 </br>
-</br>
+<a href="https://cryptor-converter.netlify.app/">Clique aqui para acessar o projeto</a>
 
-# Build Setup
+## Sobre o projeto
 
-```bash
-# install dependencies
-$ npm install
+Cripto Coin é um conversor e watchlist de criptomoedas em tempo real construído com Vue.js 3 e Nuxt.js 3. Pesquise ativos por nome ou símbolo, monte uma lista personalizada de acompanhamento, visualize variações de preço e monitore os maiores movimentos do mercado — tudo com atualização automática e suporte a tema claro/escuro.
 
-# serve with hot reload at localhost:3000
-$ cd cryptocurrency-converter
-$ npm run dev
+### Screenshots
 
-# build for production and launch server
-$ npm run build
-$ npm run start
+#### Página Principal
 
-# generate static project
-$ npm run generate
+<img height="330em" alt="Home Page Print Screen" src="https://user-images.githubusercontent.com/42364778/212822345-1e628d9f-63a7-4464-bbe2-cb8454335909.png" />
+
+#### Todos os Ativos
+
+<img height="330em" alt="All Assets Page Print Screen" src="https://user-images.githubusercontent.com/42364778/212822345-1e628d9f-63a7-4464-bbe2-cb8454335909.png" />
+
+### Tecnologias
+
+- [Vue.js 3](https://vuejs.org/)
+- [Nuxt.js 3](https://nuxt.com/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [CoinAPI.io](https://www.coinapi.io/)
+
+### IDE Recomendada
+
+[VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (desabilite o Vetur).
+
+## Arquitetura
+
+### Fluxo de dados
+
+```
+┌──────────────┐   busca/refresh   ┌─────────────────┐   resposta JSON   ┌────────────┐
+│  CryptoForm  │ ────────────────► │  /api/crypto/*  │ ────────────────► │  CoinAPI   │
+│  (watchlist) │                   │  (Nuxt server)  │                   │  REST v1   │
+└──────────────┘                   └─────────────────┘                   └────────────┘
+       │                                                                        
+       ▼ resultado                                                              
+┌──────────────┐   snapshot   ┌──────────────────────────┐                    
+│  CryptoList  │ ──────────►  │  useMarketSnapshotStorage │  (localStorage)   
+│  CryptoCard  │              └──────────────────────────┘                    
+└──────────────┘                                                               
+       │                                                                        
+       ▼ histórico                                                              
+┌───────────────────────────┐                                                  
+│  useCryptoHistoryStorage  │  (localStorage)                                  
+└───────────────────────────┘                                                  
 ```
 
-For detailed explanation on how things work, check out the [documentation](https://nuxtjs.org).
+### Política de Atualização
 
-## Special Directories
+| Gatilho         | Comportamento                                      |
+|-----------------|----------------------------------------------------|
+| Carga inicial   | Restaura watchlist e snapshot do localStorage      |
+| Auto-refresh    | Sincronização automática a cada 1 hora             |
+| Refresh manual  | Botão disponível a qualquer momento                |
+| Rate limit 429  | Erro exibido com orientação ao usuário             |
 
-You can create the following extra directories, some of which have special behaviors. Only `pages` is required; you can delete them if you don't want to use their functionality.
+### Estrutura do Projeto
 
-### `assets`
+```
+📦cripto-coin
+ ┣ 📂assets
+ ┃ ┣ 📂css
+ ┃ ┃ ┗ 📜main.css          # Estilos globais e tokens de tema
+ ┃ ┗ 📂img                 # Ícones e imagens do app
+ ┣ 📂components
+ ┃ ┣ 📜AppModal.vue         # Modal genérico reutilizável
+ ┃ ┣ 📜CryptoCard.vue       # Card de ativo individual com preço e variação
+ ┃ ┣ 📜CryptoForm.vue       # Campo de busca com autocomplete e navegação por teclado
+ ┃ ┣ 📜CryptoList.vue       # Lista dos ativos monitorados
+ ┃ ┣ 📜LoadingScreen.vue    # Overlay de carregamento
+ ┃ ┗ 📜TopMoversWidget.vue  # Widget com top 3 maiores altas e baixas
+ ┣ 📂composables
+ ┃ ┣ 📜useCryptoHistoryStorage.js    # Persistência do histórico de ativos no localStorage
+ ┃ ┣ 📜useMarketSnapshotStorage.js   # Persistência do snapshot de mercado no localStorage
+ ┃ ┗ 📜useThemePreference.js         # Gerenciamento de preferência de tema (dark/light)
+ ┣ 📂pages
+ ┃ ┣ 📜index.vue    # Página principal — watchlist e conversor
+ ┃ ┗ 📜assets.vue   # Página de listagem completa de ativos
+ ┣ 📂server
+ ┃ ┣ 📂api
+ ┃ ┃ ┗ 📂crypto
+ ┃ ┃   ┣ 📜asset.get.js    # Endpoint: GET /api/crypto/asset
+ ┃ ┃   ┗ 📜assets.get.js   # Endpoint: GET /api/crypto/assets
+ ┃ ┗ 📂utils
+ ┃   ┗ 📜coinApi.js   # Cliente HTTP para a CoinAPI (fetch + timeout + tratamento de erros)
+ ┣ 📂utils
+ ┃ ┣ 📜cryptoApi.js          # Helpers de chamada de API no lado do cliente
+ ┃ ┗ 📜cryptoMarket.js       # Utilitários de formatação e cálculo de mercado
+ ┣ 📜nuxt.config.js
+ ┣ 📜package.json
+ ┗ 📜tailwind.config.js
+```
 
-The assets directory contains your uncompiled assets such as Stylus or Sass files, images, or fonts.
+### Principais Decisões de Design
 
-More information about the usage of this directory in [the documentation](https://nuxtjs.org/docs/2.x/directory-structure/assets).
+- **Server routes do Nuxt**: As chamadas à CoinAPI passam pelo servidor (`/server/api/`) para manter a API Key fora do bundle do cliente
+- **localStorage como cache**: Snapshots de mercado e histórico de ativos são persistidos localmente para reduzir requisições desnecessárias à API
+- **Top Movers**: Calculado comparando o snapshot atual com o anterior, exibindo as 3 maiores altas e baixas
+- **Autocomplete com teclado**: Navegação por seta ↑↓, confirmação com Enter e fechamento com Esc, com atributos ARIA para acessibilidade
+- **Tema dark/light**: Preferência salva no localStorage e aplicada via classes CSS globais
+- **Tratamento de rate limit**: Erros 429 da CoinAPI são capturados e exibidos ao usuário com mensagem clara
 
-### `components`
+## Como executar
 
-The components directory contains your Vue.js components. Components make up the different parts of your page and can be reused and imported into your pages, layouts and even other components.
+### Pré-requisitos
 
-More information about the usage of this directory in [the documentation](https://nuxtjs.org/docs/2.x/directory-structure/components).
+- Node.js >= 18
+- npm >= 9
 
-### `layouts`
+### Variáveis de ambiente
 
-Layouts are a great help when you want to change the look and feel of your Nuxt app, whether you want to include a sidebar or have distinct layouts for mobile and desktop.
+Crie um arquivo `.env` na raiz de `cripto-coin/` com sua chave da [CoinAPI](https://www.coinapi.io/):
 
-More information about the usage of this directory in [the documentation](https://nuxtjs.org/docs/2.x/directory-structure/layouts).
+```env
+NUXT_CRYPTO_API_KEY=sua_chave_aqui
+```
 
-### `pages`
+> A CoinAPI oferece um plano gratuito com 100 requisições por dia. Ao exceder esse limite, a aplicação exibirá um aviso de rate limit (erro 429).
 
-This directory contains your application views and routes. Nuxt will read all the `*.vue` files inside this directory and setup Vue Router automatically.
+### Instalação
 
-More information about the usage of this directory in [the documentation](https://nuxtjs.org/docs/2.x/get-started/routing).
+```bash
+cd cripto-coin
+npm install
+```
 
-### `plugins`
+### Desenvolvimento
 
-The plugins directory contains JavaScript plugins that you want to run before instantiating the root Vue.js Application. This is the place to add Vue plugins and to inject functions or constants. Every time you need to use `Vue.use()`, you should create a file in `plugins/` and add its path to plugins in `nuxt.config.js`.
+```bash
+npm run dev
+```
 
-More information about the usage of this directory in [the documentation](https://nuxtjs.org/docs/2.x/directory-structure/plugins).
+A aplicação estará disponível em `http://localhost:3000`.
 
-### `static`
+### Build de produção
 
-This directory contains your static files. Each file inside this directory is mapped to `/`.
+```bash
+npm run build
+```
 
-Example: `/static/robots.txt` is mapped as `/robots.txt`.
+```bash
+npm run start
+```
 
-More information about the usage of this directory in [the documentation](https://nuxtjs.org/docs/2.x/directory-structure/static).
+### Geração estática
 
-### `store`
-
-This directory contains your Vuex store files. Creating a file in this directory automatically activates Vuex.
-
-More information about the usage of this directory in [the documentation](https://nuxtjs.org/docs/2.x/directory-structure/store).
+```bash
+npm run generate
+```
